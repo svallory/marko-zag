@@ -1,9 +1,14 @@
 {
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*"
+  ],
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "incremental": true,
-    "lib": ["dom", "ESNext"],
+    "lib": [
+      "dom",
+      "ESNext"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "noImplicitOverride": true,
@@ -15,7 +20,11 @@
     "strict": true,
     "target": "ESNext",
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
-    "types": ["vitest/globals", "@testing-library/jest-dom/vitest"],
+    // "types": [
+    //   "vitest/globals",
+    //   "@testing-library/jest-dom/vitest",
+    //   "@zag-js/types"
+    // ],
     "verbatimModuleSyntax": true
   }
 }

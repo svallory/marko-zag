@@ -5,17 +5,20 @@
   "license": "MIT",
   "type": "module",
   "files": [
-    "dist",
+    "dist/**/*",
+    "src",
     "marko.json",
     "!**/*.test.*",
     "!*.tsbuildinfo",
     "!**/{,*.}stories.*"
   ],
+  "types": "./dist/index.d.ts",
+  "typings": "./dist/index.d.ts",
   "scripts": {
     "@ci:build": "npm run build",
     "@ci:lint": "npm run lint",
     "@ci:test": "npm run test -- run --coverage",
-    "build": "mtc",
+    "build": "npm run clean && mtc",
     "clean": "rm -rf coverage dist node_modules/.{cache,vite,vitest}",
     "format": "eslint -f unix --fix .; stylelint -f unix --fix '**/*.css'; prettier . --write --log-level=warn; sort-package-json --quiet",
     "lint": "mtc && eslint -f unix . && stylelint -f unix '**/*.css' && prettier . --check --log-level=warn && sort-package-json --quiet --check",
@@ -24,9 +27,9 @@
   },
   "dependencies": {
     "@marko/tags-api-preview": "^0.7.2",
-    "@zag-js/core": "0.33.1",
-    "@zag-js/utils": "0.33.1",
-    "@zag-js/checkbox": "0.33.2"
+    "@zag-js/core": "0.31.1",
+    "@zag-js/utils": "0.31.1",
+    "@zag-js/checkbox": "0.31.1"
   },
   "devDependencies": {
     "@storybook/addon-actions": "7.6.10",

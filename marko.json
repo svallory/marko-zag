@@ -1,3 +1,5 @@
 {
-  "exports": "./dist/components"
+  "taglib-id": "marko-zag",
+  "script-lang": "ts",
+  "tags-dir": "./dist/components"
 }
