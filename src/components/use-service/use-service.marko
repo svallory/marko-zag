@@ -1,0 +1,28 @@
+import type { MachineSrc } from "@zag-js/core";
+import type { HookOptions, RSA, SSS, SEO, SAEO } from "../../types";
+import { getService } from "../../utils/getService";
+export interface Input<TC extends RSA, TS extends SSS, TE extends SEO = SAEO> {
+  machine: MachineSrc<TC, TS, TE>;
+  options?: HookOptions<TC, TS, TE>;
+}
+
+<const/{ actions, state: hydratedState, context }=(input.options ?? {})/>
+
+<const/service=getService(input.machine, input.options)/>
+
+<lifecycle
+  onMount() {
+    const instance = service();
+    instance.start(hydratedState);
+    if (instance.state.can("SETUP")) {
+      instance.send("SETUP");
+    }
+  }
+  onDestroy() { service().stop(); }
+/>
+
+<effect() { service().setContext(context); }/>
+
+<effect() { service().setOptions({ actions, debug: true }); }/>
+
+<return=service/>

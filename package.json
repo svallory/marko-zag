@@ -1,0 +1,22 @@
+{
+  "name": "@tokilabs/marko-zag",
+  "description": "The default Marko starter app with TypeScript",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "marko": "^5.31.17",
+    "@zag-js/core": "0.33.1",
+    "@marko/tags-api-preview": "^0.7.2",
+    "@zag-js/utils": "0.33.1"
+  },
+  "devDependencies": {
+    "@marko/run": "^0.3.0",
+    "@zag-js/types": "0.33.1"
+  },
+  "private": true,
+  "scripts": {
+    "dev": "marko-run",
+    "build": "marko-run build",
+    "preview": "marko-run preview"
+  }
+}
