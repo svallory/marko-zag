@@ -1,7 +1,7 @@
 import { createNormalizer } from "@zag-js/types"
 import { isString } from "@zag-js/utils"
 
-export type PropTypes = Marko.Input<any>
+export type PropTypes<T = Dict> = Record<"button" | "label" | "input" | "textarea" | "img" | "output" | "element" | "select" | "style" | "circle" | "svg", T>;
 
 const eventMap: Record<string, string> = {
   className: "class",

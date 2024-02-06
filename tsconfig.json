@@ -1,11 +1,21 @@
 {
+  "include": ["src/**/*"],
   "compilerOptions": {
-    "strict": true,
-    "target": "es6",
-    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
+    "incremental": true,
+    "lib": ["dom", "ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "outDir": "dist",
     "resolveJsonModule": true,
-    "lib": ["es2018", "dom"]
-  },
-  "include": ["src/**/*", ".marko-run/**/*"]
+    "rootDir": "src",
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ESNext",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
+    "types": ["vitest/globals", "@testing-library/jest-dom/vitest"],
+    "verbatimModuleSyntax": true
+  }
 }
