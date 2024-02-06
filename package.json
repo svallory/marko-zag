@@ -1,9 +1,18 @@
 {
-  "name": "@tokilabs/marko-zag",
-  "version": "1.0.0",
-  "description": "Marko library project with TypeScript",
+  "name": "marko-zag",
+  "version": "0.0.1",
+  "description": "[WIP] A Zag framework plugin for Marko",
   "license": "MIT",
   "type": "module",
+  "author": {
+    "name": "Saulo Vallory",
+    "email": "saulo@toki.life",
+    "url": "https://about.me/saulovallory"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/svallory/marko-zag"
+  },
   "files": [
     "dist/**/*",
     "src",
@@ -64,6 +73,5 @@
   },
   "peerDependencies": {
     "marko": "^5.32.7"
-  },
-  "private": true
+  }
 }
