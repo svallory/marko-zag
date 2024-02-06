@@ -1,9 +1,4 @@
-import type {
-  StateMachine,
-  Machine,
-  MachineSrc,
-  StateMachine as S,
-} from "@zag-js/core";
+import type { Machine, MachineSrc, StateMachine as S } from "@zag-js/core";
 
 export type RSA = Record<string, any>;
 export type SSS = {
@@ -58,11 +53,11 @@ type ReactiveOrTracked<TContext> = UserContext<TContext>;
  * - Solid: `{ context?: Store<Partial<TContext>> | Accessor<Partial<TContext>> } & Omit<HookOptions<...>, "context">`
  * - Vue: `{ context?: Ref<S.UserContext<TContext>> | ComputedRef<S.UserContext<TContext>> } & Omit<HookOptions<...>, "context">`
  */
-export type HookOptions<
+export type MachineOptions<
   TContext extends Record<string, any>,
-  TState extends StateMachine.StateSchema,
-  TEvent extends StateMachine.EventObject = StateMachine.AnyEventObject,
-> = Omit<StateMachine.HookOptions<TContext, TState, TEvent>, "context"> & {
+  TState extends S.StateSchema,
+  TEvent extends S.EventObject = S.AnyEventObject,
+> = Omit<S.HookOptions<TContext, TState, TEvent>, "context"> & {
   context?: ReactiveOrTracked<TContext>;
 };
 
@@ -76,44 +71,41 @@ export type HookOptions<
 // useActor hook
 declare function useActor<
   TContext extends Record<string, any>,
-  TState extends StateMachine.StateSchema,
-  TEvent extends StateMachine.EventObject = StateMachine.AnyEventObject,
+  TState extends S.StateSchema,
+  TEvent extends S.EventObject = S.AnyEventObject,
 >(
   service: Machine<TContext, TState, TEvent>,
-): readonly [
-  StateMachine.State<TContext, TState, TEvent>,
-  (evt: StateMachine.Event<TEvent>) => void,
-];
+): readonly [S.State<TContext, TState, TEvent>, (evt: S.Event<TEvent>) => void];
 
 declare function useService<
   TContext extends Record<string, any>,
-  TState extends StateMachine.StateSchema,
-  TEvent extends StateMachine.EventObject = StateMachine.AnyEventObject,
+  TState extends S.StateSchema,
+  TEvent extends S.EventObject = S.AnyEventObject,
 >(
   machine: MachineSrc<TContext, TState, TEvent>,
-  options?: StateMachine.MachineOptions<TContext, TState, TEvent>,
+  options?: S.MachineOptions<TContext, TState, TEvent>,
 ): Machine<TContext, TState, TEvent>;
 
 declare function useSnapshot<
   TContext extends Record<string, any>,
-  TState extends StateMachine.StateSchema,
-  TEvent extends StateMachine.EventObject = StateMachine.AnyEventObject,
+  TState extends S.StateSchema,
+  TEvent extends S.EventObject = S.AnyEventObject,
 >(
   service: Machine<TContext, TState, TEvent>,
-  options?: StateMachine.MachineOptions<TContext, TState, TEvent>,
-): ReactiveOrTracked<StateMachine.State<TContext, TState, TEvent>>;
+  options?: S.MachineOptions<TContext, TState, TEvent>,
+): ReactiveOrTracked<S.State<TContext, TState, TEvent>>;
 
 // useMachine hook with generic MachineOptions
 declare function useMachine<
   TContext extends Record<string, any>,
-  TState extends StateMachine.StateSchema,
-  TEvent extends StateMachine.EventObject = StateMachine.AnyEventObject,
+  TState extends S.StateSchema,
+  TEvent extends S.EventObject = S.AnyEventObject,
 >(
   machine: MachineSrc<TContext, TState, TEvent>,
-  options?: StateMachine.MachineOptions<TContext, TState, TEvent>,
+  options?: S.MachineOptions<TContext, TState, TEvent>,
 ): readonly [
-  StateMachine.State<TContext, TState, TEvent>,
-  (evt: StateMachine.Event<TEvent>) => void,
+  S.State<TContext, TState, TEvent>,
+  (evt: S.Event<TEvent>) => void,
   Machine<TContext, TState, TEvent>,
 ];
 

@@ -1,21 +1,6 @@
 import { createNormalizer, type NormalizeProps } from "@zag-js/types";
 import { isString } from "@zag-js/utils";
 
-// export type PropTypes<T = Dict> = Record<
-//   | "button"
-//   | "label"
-//   | "input"
-//   | "textarea"
-//   | "img"
-//   | "output"
-//   | "element"
-//   | "select"
-//   | "style"
-//   | "circle"
-//   | "svg",
-//   T
-//   >;
-
 export type PropTypes<TComponent = any> = Marko.Input<TComponent>;
 
 const eventMap: Record<string, string> = {
@@ -23,29 +8,7 @@ const eventMap: Record<string, string> = {
   defaultChecked: "checked",
   defaultValue: "value",
   htmlFor: "for",
-  // onBlur: "onFocusout",
-  // onCompositionEnd: "onCompositionend",
-  // onCompositionStart: "onCompositionstart",
-  // onContextMenu: "onContextmenu",
-  // onDoubleClick: "onDblclick",
-  // onDragStart: "onDragstart",
-  // onFocus: "onFocusin",
-  // onKeyDown: "onKeydown",
-  // onKeyUp: "onKeyup",
-  // onPointerCancel: "onPointercancel",
-  // onPointerDown: "onPointerdown",
-  // onPointerEnter: "onPointerenter",
-  // onPointerLeave: "onPointerleave",
-  // onPointerMove: "onPointermove",
-  // onPointerUp: "onPointerup",
 };
-
-// function camelToKebabCase(str: string): string {
-//   return str
-//     .replace(/([a-z])([A-Z])/g, "$1-$2") // Insert a dash between lower and upper case characters
-//     .replace(/[\s_]+/g, "-") // Replace whitespace and underscores with dashes
-//     .toLowerCase() // Convert everything to lower case
-// }
 
 function toMarkoProp(prop: string) {
   return prop in eventMap ? eventMap[prop] : prop;
@@ -55,7 +18,6 @@ type Dict<T = any> = Record<string, T>;
 
 function wrapHandler(handlerFn: (...params: any[]) => unknown) {
   return (...args: any[]) => {
-    // console.log("Event handler", handlerFn.name, "called")
     if ("currentTarget" in args[0]) {
       const originalEvent = args.shift();
 
@@ -69,15 +31,8 @@ function wrapHandler(handlerFn: (...params: any[]) => unknown) {
         }
       }
 
-      // muda o evento
+      // Create fake event
       fakeEvent.currentTarget = originalEvent.target;
-
-      if (originalEvent.type === "click") {
-        console.log("originalEvent spread", { ...originalEvent });
-        console.log("originalEvent.currentTarget", originalEvent.currentTarget);
-        console.log("originalEvent.target", originalEvent.target);
-        console.log("fakeEvent", fakeEvent);
-      }
 
       return handlerFn(fakeEvent, ...args);
     }
@@ -95,9 +50,6 @@ export const normalizeProps: NormalizeProps<PropTypes> =
 
       if (key.startsWith("on") && typeof value === "function") {
         normalized[key] = wrapHandler(value);
-        // if (key == "onClick") {
-        //   console.log("click:", props[key].toString(), normalized[camelToKebabCase(key)].toString())
-        // }
         continue;
       }
 
@@ -110,8 +62,6 @@ export const normalizeProps: NormalizeProps<PropTypes> =
 
       normalized[toMarkoProp(key)] = value;
     }
-
-    // console.table({ from: Object.keys(props), to: Object.keys(normalized) })
 
     return normalized;
   });

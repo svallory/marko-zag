@@ -1,10 +1,10 @@
 import type { MachineSrc } from "@zag-js/core";
-import type { HookOptions, RSA, SSS, SEO, SAEO } from "../../types";
-import { getService } from "../../utils/getService";
+import type { MachineOptions, RSA, SSS, SEO, SAEO } from "../types";
+import { getService } from "../utils/getService";
 
-export interface Input<TC extends RSA, TS extends SSS, TE extends SEO = SAEO> {
-  machine: MachineSrc<TC, TS, TE>;
-  options?: HookOptions<TC, TS, TE>;
+export interface Input<TContext extends RSA, TState extends SSS, TEvent extends SEO = SAEO> {
+  machine: MachineSrc<TContext, TState, TEvent>;
+  options?: MachineOptions<TContext, TState, TEvent>;
 }
 
 <const/{ actions, state: hydratedState, context }=(input.options ?? {})/>
