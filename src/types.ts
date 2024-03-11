@@ -33,9 +33,9 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 
 //////////////////////////////////////////////////////////////////
 
-declare function mergeProps<T extends Record<string, any>>(
+export type mergeProps = <T extends Record<string, any>>(
   ...sources: T[]
-): UnionToIntersection<TupleTypes<T[]>>;
+) => UnionToIntersection<TupleTypes<T[]>>;
 
 /**
  * In the end this is a Partial and Writeable
@@ -69,44 +69,48 @@ export type MachineOptions<
 // declare const normalizeProps: NormalizeProps<PropTypes>;
 
 // useActor hook
-declare function useActor<
+export type useActor = <
   TContext extends Record<string, any>,
   TState extends S.StateSchema,
   TEvent extends S.EventObject = S.AnyEventObject,
 >(
   service: Machine<TContext, TState, TEvent>,
-): readonly [S.State<TContext, TState, TEvent>, (evt: S.Event<TEvent>) => void];
+) => readonly [S.State<TContext, TState, TEvent>, (evt: S.Event<TEvent>) => void];
 
-declare function useService<
+export type useService = <
   TContext extends Record<string, any>,
   TState extends S.StateSchema,
   TEvent extends S.EventObject = S.AnyEventObject,
 >(
   machine: MachineSrc<TContext, TState, TEvent>,
   options?: S.MachineOptions<TContext, TState, TEvent>,
-): Machine<TContext, TState, TEvent>;
+) => Machine<TContext, TState, TEvent>;
 
-declare function useSnapshot<
+export type useSnapshot = <
   TContext extends Record<string, any>,
   TState extends S.StateSchema,
   TEvent extends S.EventObject = S.AnyEventObject,
 >(
   service: Machine<TContext, TState, TEvent>,
   options?: S.MachineOptions<TContext, TState, TEvent>,
-): ReactiveOrTracked<S.State<TContext, TState, TEvent>>;
+) => ReactiveOrTracked<S.State<TContext, TState, TEvent>>;
 
 // useMachine hook with generic MachineOptions
-declare function useMachine<
+export type useMachine = <
   TContext extends Record<string, any>,
   TState extends S.StateSchema,
   TEvent extends S.EventObject = S.AnyEventObject,
 >(
   machine: MachineSrc<TContext, TState, TEvent>,
   options?: S.MachineOptions<TContext, TState, TEvent>,
-): readonly [
+) => readonly [
   S.State<TContext, TState, TEvent>,
   (evt: S.Event<TEvent>) => void,
   Machine<TContext, TState, TEvent>,
 ];
 
-export type { mergeProps, useActor, useMachine, useService, useSnapshot };
+// export type { mergeProps, useActor, useMachine, useService, useSnapshot };
+
+export type Dict<T = any> = Record<string, T>;
+export type State<TContext extends Dict, TState extends S.StateSchema = S.StateSchema, TEvent extends S.EventObject = S.EventObject> = S.State<TContext, TState, TEvent>;
+export type Event<TEvent extends S.EventObject = S.EventObject> = TEvent | TEvent["type"];

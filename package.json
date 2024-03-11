@@ -1,9 +1,12 @@
 {
   "name": "marko-zag",
-  "version": "0.0.1",
-  "description": "[WIP] A Zag framework plugin for Marko",
+  "version": "0.0.2",
+  "description": "[WIP] A Zag plugin for the Marko framework",
   "license": "MIT",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typings": "./dist/index.d.ts",
   "author": {
     "name": "Saulo Vallory",
     "email": "saulo@toki.life",
@@ -21,8 +24,6 @@
     "!*.tsbuildinfo",
     "!**/{,*.}stories.*"
   ],
-  "types": "./dist/index.d.ts",
-  "typings": "./dist/index.d.ts",
   "scripts": {
     "@ci:build": "npm run build",
     "@ci:lint": "npm run lint",

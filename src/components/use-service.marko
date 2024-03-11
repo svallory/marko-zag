@@ -1,4 +1,4 @@
-import type { MachineSrc } from "@zag-js/core";
+import type { Machine, MachineSrc } from "@zag-js/core";
 import type { MachineOptions, RSA, SSS, SEO, SAEO } from "../types";
 import { getService } from "../utils/getService";
 
@@ -26,4 +26,4 @@ export interface Input<TContext extends RSA, TState extends SSS, TEvent extends 
 
 <effect() { service().setOptions({ actions, debug: true }); }/>
 
-<return=service/>
+<return=service as (() => Machine<TContext, TState, TEvent>)/>

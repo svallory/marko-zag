@@ -1,21 +1,19 @@
-# Starter Marko Library with TypeScript
+# Marko <-> Zag Integration
 
-A template for component libraries and other reusable Marko packages.
+A [zag](https://zagjs.com/) plugin for the [Marko](https://markojs.com) framework
 
 ## Installation
 
 ```sh
-npm init marko -- --template library-ts
+npm install marko-zag
 ```
 
-## Overview
+## Changelog
 
-This project is powered by [Marko](https://markojs.com), [Storybook](https://storybook.js.org), and [Vite](https://vitejs.dev).
+### 0.0.1
 
-- Run `npm run storybook` to view the component storybook
-- Run `npm run test` to run tests with vitest
-- Run `npm run build` to build a production-ready library
+Inital proof of concept release
 
-## Acknowledgments
+### 0.0.2
 
-Special thanks to Wojciech Malarski for the [marko-zag](https://github.com/wmalarski/marko-zag) project that has been a valuable resource and provided inspiration for our work with Marko.
+- **Fix:** Wrong return types

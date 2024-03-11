@@ -1,5 +1,10 @@
-import type { MachineSrc, StateMachine as S } from "@zag-js/core";
-import type { MachineOptions } from "../types";
+import type { Machine, MachineSrc, StateMachine as S } from "@zag-js/core";
+import type { MachineOptions, State, Event } from "../types";
+
+static {
+  // fix for marko compilation
+  
+}
 
 
 export interface Input<TContext extends Record<string, any>, TState extends S.StateSchema, TEvent extends S.EventObject = S.AnyEventObject> {
@@ -23,7 +28,7 @@ export interface Input<TContext extends Record<string, any>, TState extends S.St
 <return=(
   [
     machineState,
-    (event: S.Event<TEvent>) => service().send(event),
+    (event: Event<TEvent>) => service().send(event),
     service,
-  ] as const
+  ] as [State<TContext, TState, TEvent>, (event: Event<TEvent>) => void, () => Machine<TContext, TState, TEvent>]
 )/>
