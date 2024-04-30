@@ -36,10 +36,9 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@marko/tags-api-preview": "^0.7.2",
-    "@zag-js/checkbox": "0.31.1",
-    "@zag-js/core": "0.31.1",
-    "@zag-js/utils": "0.31.1"
+    "@marko/tags-api-preview": "^0.7.5",
+    "@zag-js/core": "^0.49.0",
+    "@zag-js/utils": "^0.49.0"
   },
   "devDependencies": {
     "@marko/compiler": "^5.34.6",
@@ -55,7 +54,7 @@
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.19.1",
     "@vitest/coverage-v8": "^1.2.1",
-    "@zag-js/types": "0.33.2",
+    "@zag-js/types": "^0.49.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
