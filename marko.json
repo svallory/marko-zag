@@ -1,5 +1,3 @@
 {
-  "taglib-id": "marko-zag",
-  "script-lang": "ts",
-  "tags-dir": "./src/components"
+  "tags-dir": "./src/tags"
 }

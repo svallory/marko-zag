@@ -1,0 +1,44 @@
+// Derives the connected api from a <service> handle — the Marko analog of
+// Zag's `connect(service, normalizeProps)`. Returns the api as a
+// serializable GETTER you call at use sites:
+//
+//   <connect/api=(service, normalizeProps) => switchMachine.connect(service, normalizeProps) service=switchService/>
+//   <label ...api().getRootProps()>
+//
+// The value shorthand holds the connect closure (MUST be written in the
+// caller's template — raw `switchMachine.connect` as input is
+// unserializable). During SSR the handle carries no running service, so a
+// throwaway never-started one is built from the handle's machine/props;
+// Zag's connect() is a pure read, so this renders correct initial
+// attributes.
+//
+// Several <connect>s may share one <service>. A handle created elsewhere
+// (e.g. spawned child services) works as long as it matches ServiceHandle.
+import { ssrService, type MarkoService } from "../machine.ts";
+import { normalizeProps } from "../normalize-props.ts";
+import type { ServiceHandle } from "./service.marko";
+
+export interface Input<Api = any> {
+  /** Connect closure: `(service, normalizeProps) => machineModule.connect(service, normalizeProps)` */
+  value: (service: MarkoService, normalize: typeof normalizeProps) => Api;
+  /** Handle returned by <service>. */
+  service: ServiceHandle;
+}
+
+// The comma expression's leading reads are api's reactive dependencies:
+// the handle (fresh identity per machine update via rev), AND an eager
+// props() call so every tracked read inside the caller's machineProps
+// closure invalidates api too. Without the latter, a controlled prop that
+// only feeds Zag `computed(...)` values (qr-code's encoded pattern
+// deriving from prop("value")) re-derives without any bindable write — the
+// machine never notifies, rev never bumps, and every api() read stays
+// stale. Reads only, no writes — cannot loop.
+<const/api=(
+  input.service,
+  input.service.props(),
+  () => input.value(
+    input.service.service ?? ssrService(input.service.machine(), input.service.props),
+    normalizeProps,
+  )
+)/>
+<return=api/>

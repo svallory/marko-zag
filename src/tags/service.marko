@@ -1,0 +1,57 @@
+// Creates and owns a running Zag service — the Marko analog of Zag's
+// `useMachine(machine, props)`. Pair with <connect> exactly like Zag's
+// two-step idiom:
+//
+//   <service/switchService machine=() => switchMachine.machine props=machineProps/>
+//   <connect/api=(service, normalizeProps) => switchMachine.connect(service, normalizeProps) service=switchService/>
+//   <label ...api().getRootProps()>...
+//
+// Returns a serializable HANDLE: { service, machine, props, rev }.
+// `service` is null during SSR (the client builds its own instance on
+// mount); `rev` bumps on every machine update, giving the handle fresh
+// identity so anything reading it — <connect>'s api derivation — recomputes.
+//
+// `machine=` MUST be a getter closure written in the caller's template
+// (`() => switchMachine.machine`): tag input is serialized for resume, and
+// a raw machine (functions from npm code) throws `Unable to serialize "input"`.
+import { createService, type MarkoService } from "../machine.ts";
+
+export interface Input {
+  /** Machine getter: `machine=() => switchMachine.machine` (never the raw machine). */
+  machine: () => any;
+  /** machineProps closure: () => ({ id, ...mapped input }). Optional. */
+  props?: () => Record<string, any>;
+}
+
+export interface ServiceHandle {
+  /** Running service on the client; null during SSR. */
+  service: MarkoService | null;
+  /** Machine getter, forwarded so <connect> can build the SSR fallback. */
+  machine: () => any;
+  /** Props closure, forwarded for the SSR fallback. */
+  props: () => Record<string, any>;
+  /** Update counter — fresh handle identity per machine update. */
+  rev: number;
+}
+
+static const EMPTY_PROPS = () => ({});
+
+<let/rev=0/>
+<let/service=null/>
+<const/props=input.props ?? EMPTY_PROPS/>
+<lifecycle
+  onMount() {
+    service = createService(input.machine(), props, () => { rev += 1 });
+    service.start();
+  }
+  onDestroy() {
+    service?.stop();
+  }
+/>
+<script>
+  // Tracks every reactive read inside the caller's machineProps closure —
+  // controlled props re-notify the machine without a hand-typed dep list.
+  props();
+  service?.propsChanged();
+</script>
+<return={ service, machine: input.machine, props, rev }/>

@@ -1,0 +1,31 @@
+// SSR-safe portal: renders content inline on the server (inside a
+// display:contents host), then reparents the host to the target on mount.
+// Marko tracks nodes by reference, so moved nodes keep working.
+export interface Input {
+  /** CSS selector for the portal target. Defaults to document.body. */
+  to?: string;
+  /** Disable reparenting (render in place). */
+  disabled?: boolean;
+  content?: Marko.Body;
+}
+
+<div/host style="display:contents" data-portal>
+  <${input.content}/>
+</div>
+
+<lifecycle
+  onMount() {
+    if (input.disabled) return;
+    const el = host();
+    const target = (input.to && document.querySelector(input.to)) || document.body;
+    if (el && el.parentNode !== target) target.appendChild(el);
+  }
+  onDestroy() {
+    // This manual remove() is REQUIRED, not defensive: Marko's own removal
+    // walks up from the tracked node through its original parent chain, but
+    // that parent no longer contains this host once it has been reparented
+    // to the portal target. Without this, the host would be orphaned on the
+    // target instead of being cleaned up.
+    host()?.remove();
+  }
+/>
