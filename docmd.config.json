@@ -1,0 +1,64 @@
+{
+  "title": "marko-zag",
+  "url": "https://marko-zag.saulo.tech",
+  "src": "docs",
+  "out": "site",
+  "engine": "js",
+  "layout": {
+    "spa": true,
+    "header": { "enabled": true },
+    "sidebar": { "collapsible": true, "defaultCollapsed": false },
+    "optionsMenu": {
+      "position": "sidebar-top",
+      "components": { "search": true, "themeSwitch": true }
+    },
+    "footer": {
+      "style": "minimal",
+      "content": "MIT © Saulo Vallory",
+      "branding": true
+    }
+  },
+  "theme": {
+    "name": "default",
+    "appearance": "system",
+    "codeHighlight": true
+  },
+  "minify": true,
+  "autoTitleFromH1": true,
+  "copyCode": true,
+  "pageNavigation": true,
+  "navigation": [
+    { "title": "Introduction", "path": "/", "icon": "zap" },
+    { "title": "Installation", "path": "/installation/", "icon": "download" },
+    {
+      "title": "Guides",
+      "icon": "book-open",
+      "collapsible": false,
+      "children": [
+        { "title": "The Three-Tag Pattern", "path": "/guides/three-tag-pattern/" },
+        { "title": "SSR & Hydration", "path": "/guides/ssr-and-hydration/" },
+        { "title": "Landmines & Gotchas", "path": "/guides/gotchas/" }
+      ]
+    },
+    {
+      "title": "API Reference",
+      "icon": "code",
+      "collapsible": false,
+      "children": [
+        { "title": "Tags", "path": "/api/tags/" },
+        { "title": "createService", "path": "/api/create-service/" },
+        { "title": "ssrService", "path": "/api/ssr-service/" },
+        { "title": "MarkoService", "path": "/api/marko-service/" },
+        { "title": "normalizeProps", "path": "/api/normalize-props/" },
+        { "title": "positionerStyle", "path": "/api/positioner-style/" },
+        { "title": "MachineInput", "path": "/api/machine-input/" }
+      ]
+    },
+    { "title": "GitHub", "path": "https://github.com/svallory/marko-zag", "icon": "github", "external": true }
+  ],
+  "plugins": {
+    "seo": {
+      "defaultDescription": "Zag.js v1 bindings for Marko 6 — SSR-safe state machine adapter."
+    }
+  }
+}
