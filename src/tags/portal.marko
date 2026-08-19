@@ -1,9 +1,25 @@
 // SSR-safe portal: renders content inline on the server (inside a
 // display:contents host), then reparents the host to the target on mount.
 // Marko tracks nodes by reference, so moved nodes keep working.
+//
+// Target resolution order (mirrors the official React/Preact Portal API):
+// container() element, then `to` selector, then the owner document's body.
+// getRootNode= keeps selector lookups and the body fallback correct inside
+// shadow roots and iframes — pass the same closure the machine receives.
 export interface Input {
-  /** CSS selector for the portal target. Defaults to document.body. */
+  /** CSS selector for the portal target. Ignored when `container` matches. */
   to?: string;
+  /**
+   * Target element getter (`container=() => el()`), highest priority.
+   * A closure, not a raw element — tag input must stay serializable.
+   */
+  container?: () => Element | null | undefined;
+  /**
+   * Root node resolver for custom environments (shadow DOM, iframes) —
+   * scopes the `to` selector lookup and the body fallback to the right
+   * document. Same shape as Zag's `getRootNode` machine prop.
+   */
+  getRootNode?: () => ShadowRoot | Document | Node;
   /** Disable reparenting (render in place). */
   disabled?: boolean;
   content?: Marko.Body;
@@ -17,8 +33,18 @@ export interface Input {
   onMount() {
     if (input.disabled) return;
     const el = host();
-    const target = (input.to && document.querySelector(input.to)) || document.body;
-    if (el && el.parentNode !== target) target.appendChild(el);
+    if (!el) return;
+    const rootNode = input.getRootNode?.() ?? document;
+    const doc = (rootNode.ownerDocument ?? rootNode) as Document;
+    // Selector lookups run against the root node itself (a ShadowRoot
+    // scopes queries to the shadow tree); the body fallback always comes
+    // from the owner document.
+    const queryRoot = "querySelector" in rootNode ? (rootNode as Document | ShadowRoot) : doc;
+    const target =
+      input.container?.() ??
+      (input.to ? queryRoot.querySelector(input.to) : null) ??
+      doc.body;
+    if (target && el.parentNode !== target) target.appendChild(el);
   }
   onDestroy() {
     // This manual remove() is REQUIRED, not defensive: Marko's own removal

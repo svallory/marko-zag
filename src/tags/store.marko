@@ -1,0 +1,45 @@
+// Marko analog of the official adapters' `useSyncExternalStore`: bridges an
+// external subscribe/snapshot store (e.g. Zag's toast store from
+// `toast.createStore`, or any `@zag-js/store` proxy) into Marko reactivity.
+//
+//   <store/toasts subscribe=(cb) => toastStore.subscribe(cb) snapshot=() => toastStore.getState()/>
+//   <for|item| of=toasts().toasts> ... </for>
+//
+// Returns a GETTER (same idiom as <connect>): call `toasts()` at use sites.
+// Subscribes on mount, unsubscribes on destroy. During SSR the getter
+// returns `serverSnapshot` (falling back to `snapshot`) — same contract as
+// React's third useSyncExternalStore argument.
+//
+// Both closures MUST be written in the caller's template (tag input is
+// serialized for resume; raw functions from npm modules throw
+// `Unable to serialize "input"`).
+export interface Input<T = unknown> {
+  /** Subscribes `onChange` to the store; returns the unsubscribe function. */
+  subscribe: (onChange: () => void) => () => void;
+  /** Reads the store's current value. */
+  snapshot: () => T;
+  /** SSR-only value; defaults to `snapshot`. */
+  serverSnapshot?: () => T;
+}
+
+<let/rev=0/>
+<let/unsubscribe=null as (() => void) | null/>
+<lifecycle
+  onMount() {
+    unsubscribe = input.subscribe(() => { rev += 1 });
+  }
+  onDestroy() {
+    unsubscribe?.();
+  }
+/>
+// The eager `rev` read (the IIFE argument) is the reactive dependency:
+// every store notification bumps rev, recomputing the const and giving
+// consumers a fresh getter identity (same idiom as <connect>'s comma
+// expression — an IIFE here because TS rejects a bare identifier on the
+// left of a comma).
+<const/value=((_rev: number) => () =>
+  typeof document === "undefined"
+    ? (input.serverSnapshot ?? input.snapshot)()
+    : input.snapshot()
+)(rev)/>
+<return=value/>
