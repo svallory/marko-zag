@@ -5,7 +5,8 @@
  * inside Marko 6 components. The TypeScript surface (this module) provides
  * the machine runtime ({@link createService}, {@link ssrService}), the
  * Marko-flavored {@link normalizeProps}, the floating-ui
- * {@link positionerStyle} constant, and the {@link MachineInput} helper type.
+ * {@link positionerStyle} constant, the {@link stripOwnProps} native-attrs
+ * helper, and the {@link MachineInput} helper type.
  *
  * The Marko surface — the `<machine-props>`, `<service>`, `<connect>`, and
  * `<portal>` tags — is auto-discovered through this package's `marko.json`
@@ -16,4 +17,5 @@
 export { createService, ssrService, type MarkoService } from "./machine.ts";
 export { normalizeProps } from "./normalize-props.ts";
 export { positionerStyle } from "./positioner-style.ts";
+export { stripOwnProps } from "./native-attrs.ts";
 export type { MachineInput } from "./machine-input.ts";
