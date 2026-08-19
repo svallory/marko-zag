@@ -8,9 +8,15 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true,
-    "types": ["marko"],
+    "types": [
+      "marko"
+    ],
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["src/**/*.ts", "src/**/*.marko"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.marko",
+    "tests/type-assertions.ts"
+  ]
 }

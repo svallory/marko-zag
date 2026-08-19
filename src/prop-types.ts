@@ -29,8 +29,17 @@ export interface PropTypes {
   path: Marko.Input<"path">;
   rect: Marko.Input<"rect">;
   circle: Marko.Input<"circle">;
-  /** Generic element props — the fallback shape for most prop getters. */
-  element: Marko.Input<"div">;
+  /**
+   * Generic element props — the fallback shape for most prop getters.
+   *
+   * Typed as the attribute surface every HTML element shares
+   * (`HTMLAttributes<Element>`), NOT a specific tag's input: the element
+   * type parameter only appears contravariantly (event-handler `target`
+   * params), so this shape is assignable to `<span>`, `<ul>`, `<a>`, … —
+   * a `Marko.Input<"div">` here would make every generic getter spreadable
+   * onto divs only.
+   */
+  element: Marko.HTMLAttributes<Element>;
   /** Normalized style object: hyphenated keys, `--custom-props` untouched. */
   style: Record<string, string | number>;
 }
