@@ -28,7 +28,7 @@
  *   `--custom-props`, which the normalizer passes through untouched.
  */
 export type PropTypes = {
-  [K in keyof Marko.NativeTags]: Marko.Input<K>;
+  [K in keyof Marko.NativeTags]: Marko.NativeTags[K]["input"];
 } & {
   element: Marko.HTMLAttributes<Element>;
   style: Marko.CSS.Properties & { [custom: `--${string}`]: string | number };
