@@ -10,36 +10,26 @@
  * conflicting attribute) is a compile error in `.marko` templates checked by
  * `@marko/type-check`.
  *
- * @remarks
- * The key set (`button`, `label`, …, `element`, `style`) is fixed by
- * `@zag-js/types`' `PropTypes` contract — every adapter supplies the same
- * thirteen entries. `element` is the generic fallback used by most prop
- * getters; `style` is the shape of a normalized style value (camelCase
- * already hyphenated by the normalizer, `--custom-props` preserved).
+ * Mirrors the official adapters, which all pass their framework's full
+ * intrinsic-elements map (`JSX.IntrinsicElements & { element, style }` in
+ * React/Solid, `Vue.NativeElements`, `SvelteHTMLElements`, …): Zag's
+ * 13-key `PropTypes` from `@zag-js/types` is only the *minimum contract*,
+ * so this maps every tag in `Marko.NativeTags` and then overrides the two
+ * special entries:
+ *
+ * - `element` — the generic fallback most prop getters use. Typed as the
+ *   attribute surface every HTML element shares (`HTMLAttributes<Element>`),
+ *   NOT a specific tag's input: the element type parameter only appears
+ *   contravariantly (event-handler `target` params), so this shape is
+ *   assignable to `<span>`, `<ul>`, `<a>`, … — a `Marko.Input<"div">` here
+ *   would make every generic getter spreadable onto divs only.
+ * - `style` — the shape of a normalized style value: hyphenated CSS
+ *   property names (Marko writes style-object keys verbatim) plus
+ *   `--custom-props`, which the normalizer passes through untouched.
  */
-export interface PropTypes {
-  button: Marko.Input<"button">;
-  label: Marko.Input<"label">;
-  input: Marko.Input<"input">;
-  textarea: Marko.Input<"textarea">;
-  img: Marko.Input<"img">;
-  output: Marko.Input<"output">;
-  select: Marko.Input<"select">;
-  svg: Marko.Input<"svg">;
-  path: Marko.Input<"path">;
-  rect: Marko.Input<"rect">;
-  circle: Marko.Input<"circle">;
-  /**
-   * Generic element props — the fallback shape for most prop getters.
-   *
-   * Typed as the attribute surface every HTML element shares
-   * (`HTMLAttributes<Element>`), NOT a specific tag's input: the element
-   * type parameter only appears contravariantly (event-handler `target`
-   * params), so this shape is assignable to `<span>`, `<ul>`, `<a>`, … —
-   * a `Marko.Input<"div">` here would make every generic getter spreadable
-   * onto divs only.
-   */
+export type PropTypes = {
+  [K in keyof Marko.NativeTags]: Marko.Input<K>;
+} & {
   element: Marko.HTMLAttributes<Element>;
-  /** Normalized style object: hyphenated keys, `--custom-props` untouched. */
-  style: Record<string, string | number>;
-}
+  style: Marko.CSS.Properties & { [custom: `--${string}`]: string | number };
+};

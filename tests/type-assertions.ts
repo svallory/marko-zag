@@ -22,3 +22,18 @@ export const ontoDiv: Marko.Input<"div"> = element;
 declare const button: PropTypes["button"];
 // @ts-expect-error button props are not valid input props
 export const strictStaysStrict: Marko.Input<"input"> = button;
+
+// The map covers ALL native tags (official-adapter parity), not just Zag's
+// 13-key minimum — each entry types exactly like the tag's own attributes.
+declare const li: PropTypes["li"];
+export const liIsNative: Marko.Input<"li"> = li;
+declare const anchorProps: PropTypes["a"];
+export const anchorIsNative: Marko.Input<"a"> = anchorProps;
+
+// style accepts hyphenated properties and custom properties.
+export const styleShape: PropTypes["style"] = {
+  "background-color": "red",
+  "--reference-width": "10px",
+};
+// @ts-expect-error camelCase keys are not part of the normalized style shape
+export const styleRejectsCamel: PropTypes["style"] = { backgroundColor: "red" };
