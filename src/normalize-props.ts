@@ -2,7 +2,9 @@
  * normalizeProps for Marko 6 native tags.
  *
  * - `className`→`class`, `htmlFor`→`for`, `onChange`→`onInput`,
- *   `onDoubleClick`→`onDblClick` (Marko lowercases the event name).
+ *   `onDoubleClick`→`onDblClick` (Marko lowercases the event name),
+ *   `onFocus`→`onFocusin`, `onBlur`→`onFocusout` (bubbling parity — see
+ *   propMap comment).
  * - style objects: hyphenate camelCase keys (Marko writes keys verbatim).
  * - `event.currentTarget` is unavailable in Marko's delegated events; every
  *   handler is wrapped to shadow it with the element Marko passes as the
@@ -15,6 +17,7 @@
  */
 import { createNormalizer } from "@zag-js/types";
 import { isFunction } from "@zag-js/utils";
+import type { PropTypes } from "./prop-types.ts";
 
 type Dict = Record<string, any>;
 
@@ -25,6 +28,15 @@ const propMap: Dict = {
   defaultChecked: "checked",
   onChange: "onInput",
   onDoubleClick: "onDblClick",
+  // Zag's onFocus/onBlur assume React's synthetic-focus semantics, where a
+  // parent's handler fires when a descendant gains focus. Marko delegates
+  // every event at the document but only walks ancestors when `ev.bubbles`,
+  // and focus/blur don't bubble — a delegated onFocus would fire for the
+  // exact target only, never the parent. focusin/focusout are the bubbling
+  // twins, so this mapping restores the semantics machines were written for
+  // (every non-React official adapter does the same).
+  onFocus: "onFocusin",
+  onBlur: "onFocusout",
   // Zag emits the React-style `tabIndex`. Marko writes attribute keys verbatim,
   // so the camelCase spelling is treated as a *different* attribute from the
   // `tabindex` already on the element: each update removes the old one and adds
@@ -37,11 +49,13 @@ const propMap: Dict = {
 };
 
 const uppercasePattern = /[A-Z]/g;
+/** camelCase → kebab-case for style keys; `--custom-props` pass through. */
 function hyphenate(name: string) {
   if (name.startsWith("--")) return name;
   return name.replace(uppercasePattern, (m) => "-" + m.toLowerCase());
 }
 
+/** Normalizes a React-style style object to Marko's hyphenated shape. */
 function cssify(style: Dict) {
   const css: Dict = {};
   for (const property in style) {
@@ -52,6 +66,10 @@ function cssify(style: Dict) {
   return css;
 }
 
+/**
+ * Wraps a Zag handler so `event.currentTarget` resolves to the element Marko
+ * passes as the handler's second argument (delegated events lack it).
+ */
 function wrapHandler(fn: (event: Event) => void) {
   return function (event: Event, el?: Element) {
     if (el) {
@@ -74,8 +92,11 @@ const isServer = typeof document === "undefined";
  *
  * What it translates:
  * - `className`→`class`, `htmlFor`→`for`, `onChange`→`onInput`,
- *   `onDoubleClick`→`onDblClick` (Marko lowercases the event name), and
- *   crucially `tabIndex`→`tabindex` (see remarks).
+ *   `onDoubleClick`→`onDblClick` (Marko lowercases the event name),
+ *   `onFocus`→`onFocusin` / `onBlur`→`onFocusout` (focus/blur don't bubble,
+ *   so Marko's document-level delegation would never notify a parent — the
+ *   focusin/focusout twins restore the React-like semantics Zag machines
+ *   assume), and crucially `tabIndex`→`tabindex` (see remarks).
  * - style objects: camelCase keys hyphenated (Marko writes keys verbatim).
  * - `event.currentTarget` is unavailable in Marko's delegated events; every
  *   handler is wrapped to shadow it with the element Marko passes as the
@@ -101,7 +122,7 @@ const isServer = typeof document === "undefined";
  * keypress. Mapping to the canonical lowercase name keeps it a single
  * in-place attribute write.
  */
-export const normalizeProps = createNormalizer<any>((props: Dict) => {
+export const normalizeProps = createNormalizer<PropTypes>((props: Dict) => {
   const normalized: Dict = {};
   for (const key in props) {
     const value = props[key];
