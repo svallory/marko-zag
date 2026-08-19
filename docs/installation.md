@@ -26,7 +26,7 @@ bun add @zag-js/dialog @zag-js/switch @zag-js/tooltip
 ## A Marko-aware bundler is required
 
 marko-zag **ships source**, not compiled output: the package exports
-`./src/index.ts` directly, and the four tags are `.marko` files. Marko tags
+`./src/index.ts` directly, and the five tags are `.marko` files. Marko tags
 cannot be usefully pre-compiled by a library — compilation happens in the
 context of the consuming app (server vs. browser output, Marko version,
 optimization flags). So your build must run `node_modules` sources through

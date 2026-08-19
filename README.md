@@ -23,7 +23,7 @@ consumed directly.
 
 ## The three-tag pattern
 
-The four tags (`<machine-props>`, `<service>`, `<connect>`, `<portal>`) are
+The five tags (`<machine-props>`, `<service>`, `<connect>`, `<portal>`, `<store>`) are
 auto-discovered from the package's taglib — no imports in `.marko` files:
 
 ```marko

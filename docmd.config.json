@@ -50,6 +50,7 @@
         { "title": "ssrService", "path": "/api/ssr-service/" },
         { "title": "MarkoService", "path": "/api/marko-service/" },
         { "title": "normalizeProps", "path": "/api/normalize-props/" },
+        { "title": "mergeProps", "path": "/api/merge-props/" },
         { "title": "positionerStyle", "path": "/api/positioner-style/" },
         { "title": "MachineInput", "path": "/api/machine-input/" }
       ]

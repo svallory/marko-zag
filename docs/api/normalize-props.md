@@ -22,6 +22,7 @@ which passes it for you.
 | `htmlFor` | `for` | Same. |
 | `onChange` | `onInput` | Marko/DOM input semantics. |
 | `onDoubleClick` | `onDblClick` | Marko lowercases the event name. |
+| `onFocus` / `onBlur` | `onFocusin` / `onFocusout` | Focus/blur don't bubble; Marko's document-level delegation would only ever notify the exact target. The focusin/focusout twins restore the React-like semantics Zag machines assume (every non-React official adapter maps the same way). |
 | `tabIndex` | `tabindex` | **Load-bearing focus fix** — see below. |
 | `defaultValue` / `defaultChecked` | `value` / `checked` | Initial-value path for native inputs. |
 | style objects | hyphenated keys | Marko writes style keys verbatim; camelCase must become `kebab-case`. |

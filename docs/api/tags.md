@@ -1,11 +1,11 @@
 ---
 title: "Tags"
-description: "The four Marko tags: machine-props, service, connect, portal."
+description: "The five Marko tags: machine-props, service, connect, portal, store."
 ---
 
 # Tags
 
-marko-zag ships four tags, auto-discovered from the package's `marko.json`
+marko-zag ships five tags, auto-discovered from the package's `marko.json`
 taglib — no imports needed in `.marko` files. They compose in a fixed order;
 see [The Three-Tag Pattern](/guides/three-tag-pattern/) for the full worked
 example.
@@ -116,10 +116,39 @@ Marko tracks nodes by reference, so moved nodes keep working.
 
 | Attribute | Type | Description |
 | --- | --- | --- |
-| `to` | `string` | CSS selector for the portal target. Defaults to `document.body`. |
+| `to` | `string` | CSS selector for the portal target. Ignored when `container` matches. |
+| `container` | `() => Element \| null` | Target element getter (highest priority) — a closure, so tag input stays serializable. |
+| `getRootNode` | `() => ShadowRoot \| Document \| Node` | Root node resolver for shadow DOM/iframes; scopes the `to` lookup and the body fallback. Same shape as Zag's machine prop. |
 | `disabled` | `boolean` | Disable reparenting (render in place). |
 | `content` | `Marko.Body` | The portalled content (body content works too). |
+
+Target resolution order (mirroring the official React/Preact `Portal`):
+`container()`, then `to`, then the owner document's `body`.
 
 On destroy the tag removes the host manually — required, not defensive:
 Marko's own removal walks the *original* parent chain, which no longer
 contains the reparented host.
+
+## `<store>`
+
+Marko analog of the official adapters' `useSyncExternalStore`: bridges an
+external subscribe/snapshot store — Zag's toast store from
+`toast.createStore`, or any `@zag-js/store` proxy — into Marko reactivity.
+Subscribes on mount, unsubscribes on destroy; returns a **getter** (same
+idiom as `<connect>`).
+
+```marko
+<store/toasts
+  subscribe=(onChange) => toastStore.subscribe(onChange)
+  snapshot=() => toastStore.getState()
+/>
+<for|item| of=toasts().toasts> ... </for>
+```
+
+### Input
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `subscribe` | `(onChange: () => void) => () => void` | Subscribes to the store; returns unsubscribe. Written in your template (serialization). |
+| `snapshot` | `() => T` | Reads the store's current value. |
+| `serverSnapshot` | `() => T` | SSR-only value; defaults to `snapshot`. |
