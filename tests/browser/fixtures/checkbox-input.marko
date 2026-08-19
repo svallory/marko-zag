@@ -1,0 +1,41 @@
+// Fixture for the value/checked-property browser test: a real Marko
+// component using createService + connect directly, spreading
+// normalizeProps output onto a native <input> via Marko's `...` spread.
+// Verifies (in a real browser, with actual Marko-compiled runtime code)
+// that the resulting DOM node gets `checked` set as a PROPERTY, not just an
+// attribute, and updates reactively as the machine's bindable context
+// changes.
+import * as checkbox from "@zag-js/checkbox";
+import { createService, type MarkoService } from "../../../src/machine.ts";
+import { normalizeProps } from "../../../src/normalize-props.ts";
+
+export interface Input {
+  id: string;
+  defaultChecked?: boolean;
+  onCheckedChange?: (details: { checked: boolean }) => void;
+}
+
+<let/rev=0/>
+<let/svc=null as MarkoService<any> | null/>
+<const/machineProps=() => ({
+  id: input.id,
+  defaultChecked: input.defaultChecked,
+  onCheckedChange: input.onCheckedChange,
+})/>
+<lifecycle
+  onMount() {
+    svc = createService(checkbox.machine, machineProps, () => { rev += 1 });
+    svc.start();
+  }
+  onDestroy() {
+    svc?.stop();
+  }
+/>
+<const/api=(rev, () => svc && checkbox.connect(svc, normalizeProps))/>
+
+<if=api()>
+  <label ...api()!.getRootProps()>
+    <input ...api()!.getHiddenInputProps() class="fixture-checkbox"/>
+    <span>Toggle</span>
+  </label>
+</if>

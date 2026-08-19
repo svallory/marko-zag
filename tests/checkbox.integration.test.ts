@@ -82,7 +82,6 @@ describe("checkbox integration", () => {
     const rootProps = api.getRootProps() as Record<string, any>;
     expect(rootProps["data-state"]).toBe("checked");
     const inputProps = api.getHiddenInputProps() as Record<string, any>;
-    expect(typeof inputProps.onInput ?? inputProps.onChange).toBeDefined();
     // at least one handler function present on the client
     expect(Object.values(inputProps).some((v) => typeof v === "function")).toBe(true);
     service.stop();

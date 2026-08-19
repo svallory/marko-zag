@@ -1,0 +1,38 @@
+// Fixture isolating the `value` half of the property-vs-attribute question:
+// a plain `<let>`-driven reactive value, run through normalizeProps and
+// spread onto a native <input> exactly the way a Zag machine's
+// getInputProps() would be spread. No machine involved — this isolates
+// Marko's runtime attr/property application from machine plumbing.
+//
+// IMPORTANT finding (see tests/browser/value-checked-semantics.browser.test.ts):
+// Marko 6 only re-syncs an input's live `.value` PROPERTY on re-render when
+// a `valueChange` handler is present (see `_attr_input_value` in
+// node_modules/marko/dist/dom-*.js) — without it, `value=` behaves like
+// `defaultValue=` after the first mount (matches React's controlled vs.
+// uncontrolled distinction). normalizeProps maps Zag's `onChange`→`onInput`,
+// never `valueChange`, so a Zag-driven input is uncontrolled from Marko's
+// own diffing perspective; Zag machines instead read/write the DOM node's
+// `.value`/`.checked` directly via refs in their `watch` effects (see
+// @zag-js/checkbox's syncInputElement, exercised by
+// tests/checkbox.integration.test.ts). This fixture demonstrates BOTH: the
+// plain spread (uncontrolled after mount) and explicit `valueChange` wiring
+// (genuinely controlled, syncing on every render).
+import { normalizeProps } from "../../../src/normalize-props.ts";
+
+export interface Input {
+  id: string;
+  initialValue?: string;
+}
+
+<let/value=input.initialValue ?? ""/>
+<const/props=normalizeProps.input({
+  id: input.id,
+  value,
+  onChange(event: Event) {
+    value = (event.target as HTMLInputElement).value;
+  },
+})/>
+
+<input ...props class="fixture-value-input"/>
+<input class="fixture-controlled-input" value=value valueChange(v: string) { value = v }/>
+<button class="fixture-set-btn" onClick() { value = "set-from-button" }>set</button>
