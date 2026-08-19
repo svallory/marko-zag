@@ -14,22 +14,23 @@
 // `machine=` MUST be a getter closure written in the caller's template
 // (`() => switchMachine.machine`): tag input is serialized for resume, and
 // a raw machine (functions from npm code) throws `Unable to serialize "input"`.
+import type { Machine, MachineSchema } from "@zag-js/core";
 import { createService, type MarkoService } from "../machine.ts";
 
-export interface Input {
+export interface Input<T extends MachineSchema = MachineSchema> {
   /** Machine getter: `machine=() => switchMachine.machine` (never the raw machine). */
-  machine: () => any;
+  machine: () => Machine<T>;
   /** machineProps closure: () => ({ id, ...mapped input }). Optional. */
-  props?: () => Record<string, any>;
+  props?: () => Partial<T["props"]>;
 }
 
-export interface ServiceHandle {
+export interface ServiceHandle<T extends MachineSchema = MachineSchema> {
   /** Running service on the client; null during SSR. */
-  service: MarkoService | null;
+  service: MarkoService<T> | null;
   /** Machine getter, forwarded so <connect> can build the SSR fallback. */
-  machine: () => any;
+  machine: () => Machine<T>;
   /** Props closure, forwarded for the SSR fallback. */
-  props: () => Record<string, any>;
+  props: () => Partial<T["props"]>;
   /** Update counter — fresh handle identity per machine update. */
   rev: number;
 }
@@ -37,12 +38,12 @@ export interface ServiceHandle {
 static const EMPTY_PROPS = () => ({});
 
 <let/rev=0/>
-<let/service=null/>
+<let/service=null as MarkoService<T> | null/>
 <const/props=input.props ?? EMPTY_PROPS/>
 <lifecycle
   onMount() {
     service = createService(input.machine(), props, () => { rev += 1 });
-    service.start();
+    service!.start();
   }
   onDestroy() {
     service?.stop();

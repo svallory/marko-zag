@@ -14,15 +14,16 @@
 //
 // Several <connect>s may share one <service>. A handle created elsewhere
 // (e.g. spawned child services) works as long as it matches ServiceHandle.
+import type { MachineSchema } from "@zag-js/core";
 import { ssrService, type MarkoService } from "../machine.ts";
 import { normalizeProps } from "../normalize-props.ts";
 import type { ServiceHandle } from "./service.marko";
 
-export interface Input<Api = any> {
+export interface Input<Api = any, T extends MachineSchema = MachineSchema> {
   /** Connect closure: `(service, normalizeProps) => machineModule.connect(service, normalizeProps)` */
-  value: (service: MarkoService, normalize: typeof normalizeProps) => Api;
+  value: (service: MarkoService<T>, normalize: typeof normalizeProps) => Api;
   /** Handle returned by <service>. */
-  service: ServiceHandle;
+  service: ServiceHandle<T>;
 }
 
 // The comma expression's leading reads are api's reactive dependencies:

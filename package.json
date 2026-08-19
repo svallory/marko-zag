@@ -25,7 +25,7 @@
     "marko.json"
   ],
   "scripts": {
-    "check": "tsc --noEmit -p tsconfig.json",
+    "check": "marko-type-check -p ./tsconfig.json -d condensed",
     "docs:dev": "docmd dev",
     "docs:build": "docmd build"
   },

@@ -25,6 +25,9 @@ import {
   MachineStatus,
   matchesState,
   resolveStateValue,
+  type Machine,
+  type MachineSchema,
+  type Service,
 } from "@zag-js/core";
 import { callAll, compact, ensure, isFunction, isString, toArray, warn, isEqual } from "@zag-js/utils";
 
@@ -46,25 +49,7 @@ type Dict = Record<string, any>;
  * serializes; the instance is created fresh in `onMount`). The `<service>`
  * tag implements this contract for you.
  */
-export interface MarkoService {
-  /** Current state accessor with `matches(...values)` / `hasTag(tag)` helpers. */
-  state: Dict;
-  /** Sends an event to the machine (processed on a microtask; no-op unless started). */
-  send: (event: Dict) => void;
-  /** Bindable context accessor: `get` / `set` / `initial` / `hash` by key. */
-  context: Dict;
-  /** Reads a resolved machine prop (user props merged over machine defaults). */
-  prop: (key: string) => any;
-  /** Zag scope (id, ids, getRootNode) used for DOM queries. */
-  scope: Dict;
-  /** Mutable non-reactive refs store: `get(key)` / `set(key, value)`. */
-  refs: Dict;
-  /** Evaluates a machine `computed` value by key. */
-  computed: (key: string) => any;
-  /** Current event, with `current()` / `previous()` accessors. */
-  event: Dict;
-  /** Machine status: "Not Started" | "Started" | "Stopped". */
-  getStatus: () => string;
+export interface MarkoService<T extends MachineSchema = MachineSchema> extends Service<T> {
   /**
    * Client-only: marks the machine started and runs entry actions/effects.
    * Call from `<lifecycle onMount>`. Also schedules one recompute so the
@@ -110,7 +95,10 @@ const noop = () => {};
  * use it inline. The client builds its own real service via
  * {@link createService} on mount.
  */
-export function ssrService(machine: any, userProps: () => Dict): MarkoService {
+export function ssrService<T extends MachineSchema>(
+  machine: Machine<T>,
+  userProps: () => Partial<T["props"]>,
+): MarkoService<T> {
   return createService(machine, userProps, noop);
 }
 
@@ -153,7 +141,18 @@ export function ssrService(machine: any, userProps: () => Dict): MarkoService {
  * positioner, say) does not exist yet when the machine's entry effects fire.
  * Two rAFs guarantee the notify → render pass has committed first.
  */
-export function createService(machine: any, userProps: () => Dict, notify: () => void): MarkoService {
+export function createService<T extends MachineSchema>(
+  typedMachine: Machine<T>,
+  userProps: () => Partial<T["props"]>,
+  notify: () => void,
+): MarkoService<T> {
+  // Machine<T>'s mapped types (implementations keyed by T["action"], context
+  // keyed by keyof T["context"], Scope's full method set, etc.) are fine on
+  // the public signature but unworkable inside this generic-erased runtime —
+  // every helper below reads arbitrary string keys resolved dynamically, not
+  // statically known members of T. Erase once here; the return statement
+  // re-asserts MarkoService<T> for callers.
+  const machine: any = typedMachine;
   // Memoized: machines call prop() dozens of times per connect(); rebuilding
   // props (and e.g. select collections) per read defeats Zag's identity
   // checks and is O(n) jank. Invalidated on propsChanged() and each flush.
@@ -462,6 +461,10 @@ export function createService(machine: any, userProps: () => Dict, notify: () =>
 
   machine.watch?.(getParams());
 
+  // Runtime shape matches Service<T> structurally (verified above until the
+  // erasure at the top of this function); the string-keyed helpers can't
+  // satisfy T's mapped-type indices statically, so assert once at the
+  // boundary instead of threading T through every closure.
   return {
     state: getState(),
     send,
@@ -503,5 +506,5 @@ export function createService(machine: any, userProps: () => Dict, notify: () =>
       runTracks();
       notify();
     },
-  };
+  } as MarkoService<T>;
 }
