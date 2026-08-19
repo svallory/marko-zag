@@ -26,13 +26,15 @@
   ],
   "scripts": {
     "check": "marko-type-check -p ./tsconfig.json -d condensed",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "docs:dev": "docmd dev",
     "docs:build": "docmd build"
   },
   "dependencies": {
-    "@zag-js/core": "1.43.0",
-    "@zag-js/types": "1.43.0",
-    "@zag-js/utils": "1.43.0"
+    "@zag-js/core": "^1.43.0",
+    "@zag-js/types": "^1.43.0",
+    "@zag-js/utils": "^1.43.0"
   },
   "peerDependencies": {
     "marko": "^6.3.34"
@@ -40,8 +42,13 @@
   "devDependencies": {
     "@docmd/core": "^0.9.2",
     "@marko/type-check": "^2.0.0",
+    "@zag-js/checkbox": "^1.43.0",
+    "@zag-js/combobox": "^1.43.0",
+    "@zag-js/tooltip": "^1.43.0",
+    "jsdom": "^25.0.0",
     "marko": "^6.3.34",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
   },
   "keywords": [
     "marko",
