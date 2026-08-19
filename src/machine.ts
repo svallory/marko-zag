@@ -25,8 +25,12 @@ import {
   MachineStatus,
   matchesState,
   resolveStateValue,
+  type Bindable,
+  type BindableParams,
+  type EventObject,
   type Machine,
   type MachineSchema,
+  type Scope,
   type Service,
 } from "@zag-js/core";
 import { callAll, compact, ensure, isFunction, isString, toArray, warn, isEqual } from "@zag-js/utils";
@@ -66,7 +70,8 @@ export interface MarkoService<T extends MachineSchema = MachineSchema> extends S
   propsChanged: () => void;
 }
 
-const access = (v: any) => (isFunction(v) ? v() : v);
+/** Unwraps a value-or-thunk (Zag passes deps and props both ways). */
+const access = <T>(v: T | (() => T)): T => (isFunction(v) ? v() : v);
 const noop = () => {};
 
 /**
@@ -157,35 +162,45 @@ export function createService<T extends MachineSchema>(
   // props (and e.g. select collections) per read defeats Zag's identity
   // checks and is O(n) jank. Invalidated on propsChanged() and each flush.
   let propsCache: Dict | null = null;
-  let scopeCache: Dict | null = null;
+  let scopeCache: Scope | null = null;
   const invalidateProps = () => {
     propsCache = null;
     scopeCache = null;
   };
 
-  const getProps = () =>
+  /** Resolved machine props (user props through `machine.props`), memoized. */
+  const getProps = (): Dict =>
     (propsCache ??=
       machine.props?.({ props: compact(access(userProps)), scope: getScope() }) ?? access(userProps));
 
-  const getScope = () => {
+  /** Zag scope (id/ids/getRootNode DOM helpers), memoized with the props. */
+  const getScope = (): Scope => {
     if (!scopeCache) {
-      const { id, ids, getRootNode } = access(userProps);
+      const { id, ids, getRootNode } = access(userProps) as Dict;
       scopeCache = createScope({ id, ids, getRootNode });
     }
     return scopeCache;
   };
 
+  /** Zag's `prop(key)` accessor — reads through the memoized props. */
   const prop = (key: string) => getProps()[key];
 
-  const debug = (...args: any[]) => {
+  const debug = (...args: unknown[]) => {
     if (machine.debug) console.log(...args);
   };
 
   // --- track (machine.watch) ------------------------------------------------
-  const tracks: Array<{ deps: any[]; effect: VoidFunction; prev: any[] }> = [];
-  const createTrack = (deps: any[], effect: VoidFunction) => {
+  /** One registered `machine.watch` tracker: dep thunks + last-seen values. */
+  interface TrackEntry {
+    deps: Array<() => unknown>;
+    effect: VoidFunction;
+    prev: unknown[];
+  }
+  const tracks: TrackEntry[] = [];
+  const createTrack = (deps: Array<() => unknown>, effect: VoidFunction) => {
     tracks.push({ deps, effect, prev: deps.map((d) => access(d)) });
   };
+  /** Diffs every track's deps (deep `isEqual`) and fires changed effects. */
   const runTracks = () => {
     for (const t of tracks) {
       const next = t.deps.map((d) => access(d));
@@ -203,12 +218,12 @@ export function createService<T extends MachineSchema>(
   // after. scheduleUpdate() is unconditional — a transition must always
   // reach the DOM even when a context write is value-equal.
   const bindablePrevSyncs: VoidFunction[] = [];
-  function createBindable(props: () => Dict) {
+  function createBindable<V>(props: () => BindableParams<V>): Bindable<V> {
     const initial = props().value ?? props().defaultValue;
     const eq = props().isEqual ?? Object.is;
-    let value = initial;
+    let value = initial as V;
     const controlled = () => props().value !== undefined;
-    const get = () => (controlled() ? props().value : value);
+    const get = (): V => (controlled() ? (props().value as V) : value);
     const prevValue = { current: initial };
     bindablePrevSyncs.push(() => {
       prevValue.current = get();
@@ -217,29 +232,33 @@ export function createService<T extends MachineSchema>(
       get current() {
         return get();
       },
-      set current(v) {
+      set current(v: V) {
         value = v;
       },
     };
-    const set = (v: any) => {
+    const set = (v: V | ((prev: V) => V)) => {
       const next = isFunction(v) ? v(get()) : v;
       const prev = prevValue.current;
       if (props().debug) console.log(`[bindable > ${props().debug}] setValue`, { next, prev });
       if (!controlled()) value = next;
       prevValue.current = next;
       if (!eq(next, prev)) props().onChange?.(next, prev);
-      scheduleUpdate();
+      // sync bindables (input-cursor machines: number-input, pin-input, …)
+      // must reach the renderer before the machine's next DOM read — flush
+      // now instead of batching on a microtask.
+      if (props().sync) flushUpdate();
+      else scheduleUpdate();
     };
     return {
       initial,
       ref,
       get,
       set,
-      invoke(nextValue: any, prevValue2: any) {
-        props().onChange?.(nextValue, prevValue2);
+      invoke(nextValue: V, previousValue: V) {
+        props().onChange?.(nextValue, previousValue);
         scheduleUpdate();
       },
-      hash(v: any) {
+      hash(v: V) {
         return props().hash?.(v) ?? String(v);
       },
     };
@@ -253,14 +272,20 @@ export function createService<T extends MachineSchema>(
   };
 
   let updateScheduled = false;
+  /** Invalidate caches, re-run watch tracks, and notify the host — now. */
+  const flushUpdate = () => {
+    updateScheduled = false;
+    invalidateProps();
+    runTracks();
+    notify();
+  };
+  /** Batches {@link flushUpdate} on a microtask; collapses repeat calls. */
   const scheduleUpdate = () => {
     if (updateScheduled) return;
     updateScheduled = true;
     queueMicrotask(() => {
-      updateScheduled = false;
-      invalidateProps();
-      runTracks();
-      notify();
+      if (!updateScheduled) return; // a sync flush already ran
+      flushUpdate();
     });
   };
 
@@ -280,6 +305,7 @@ export function createService<T extends MachineSchema>(
     getEvent: () => getEvent(),
   });
 
+  /** Zag's `BindableContext` facade — string-keyed reads/writes over the bindables. */
   const ctx = {
     get: (key: string) => context?.[key].get(),
     set: (key: string, value: any) => context?.[key].set(value),
@@ -299,6 +325,7 @@ export function createService<T extends MachineSchema>(
     },
   };
 
+  /** Zag's `computed(key)` — recomputed per call, never cached (Zag contract). */
   const computed = (key: string): any => {
     ensure(machine.computed, () => `[zag-js] No computed object found on machine`);
     const fn = machine.computed[key];
@@ -307,22 +334,25 @@ export function createService<T extends MachineSchema>(
 
   // --- events / state -------------------------------------------------------
   const effects = new Map<string, VoidFunction>();
-  const transitionRef: { current: any } = { current: null };
-  const previousEventRef: { current: any } = { current: null };
-  const eventRef: { current: any } = { current: { type: "" } };
+  const transitionRef: { current: Dict | null } = { current: null };
+  const previousEventRef: { current: EventObject | null } = { current: null };
+  const eventRef: { current: EventObject } = { current: { type: "" } };
 
+  /** Current event decorated with `current()`/`previous()` accessors. */
   const getEvent = () =>
     Object.assign({}, eventRef.current, {
       current: () => eventRef.current,
       previous: () => previousEventRef.current,
     });
 
+  /** State bindable decorated with `matches()`/`hasTag()` helpers. */
   const getState = () =>
     Object.assign({}, state, {
       matches: (...values: string[]) => values.some((v) => matchesState(state.get(), v)),
       hasTag: (tag: string) => hasTag(machine, state.get(), tag),
     });
 
+  /** The `Params` bag Zag hands to actions, guards, effects, and `watch`. */
   const getParams = (): Dict => ({
     state: getState(),
     context: ctx,
@@ -341,6 +371,7 @@ export function createService<T extends MachineSchema>(
     choose,
   });
 
+  /** Runs the named actions from `machine.implementations.actions`. */
   const action = (keys: any) => {
     const strs = isFunction(keys) ? keys(getParams()) : keys;
     if (!strs) return;
@@ -351,6 +382,7 @@ export function createService<T extends MachineSchema>(
     }
   };
 
+  /** Evaluates a guard by name (via implementations) or inline function. */
   const guard = (str: any) => {
     if (isFunction(str)) return str(getParams());
     const fn = machine.implementations?.guards?.[str];
@@ -392,6 +424,7 @@ export function createService<T extends MachineSchema>(
     };
   };
 
+  /** Picks the first transition whose guard passes (Zag's `choose`). */
   const choose = (transitions: any) =>
     toArray(transitions).find((t: any) => {
       let result = !t.guard;
@@ -402,7 +435,10 @@ export function createService<T extends MachineSchema>(
 
   const state = createBindable(() => ({
     defaultValue: resolveStateValue(machine, machine.initialState({ prop })),
-    onChange(nextState: string, prevState: string) {
+    onChange(nextState: string, previousState: string | undefined) {
+      // A state bindable always transitions from a concrete state
+      // (INIT_STATE on start); undefined never occurs at runtime.
+      const prevState = previousState as string;
       const { exiting, entering } = getExitEnterStates(
         machine,
         prevState,
@@ -437,25 +473,41 @@ export function createService<T extends MachineSchema>(
 
   let status = MachineStatus.NotStarted;
 
-  const send = (event: any) => {
+  // Events sent before start() are buffered and replayed once the machine
+  // starts (Vue-adapter pattern): in Marko, a child component's onMount runs
+  // before its parent's, so a child can legitimately send() before the
+  // parent's <lifecycle onMount> has started the service. Dropping those
+  // events would silently lose real interactions.
+  const pendingEvents: EventObject[] = [];
+
+  /** Runs one event through the machine's transition table. */
+  const transition = (event: EventObject) => {
+    previousEventRef.current = eventRef.current;
+    eventRef.current = event;
+    const currentState = state.get();
+    const { transitions, source } = findTransition(machine, currentState, event.type);
+    const chosen = choose(transitions);
+    if (!chosen) return;
+    transitionRef.current = chosen;
+    const target = resolveStateValue(machine, chosen.target ?? currentState, source) as string;
+    debug("transition", event.type, chosen.target || currentState, `(${chosen.actions})`);
+    if (target !== currentState) {
+      state.set(target);
+    } else if (chosen.reenter) {
+      state.invoke(currentState, currentState);
+    } else {
+      action(chosen.actions);
+    }
+  };
+
+  const send = (event: EventObject) => {
     queueMicrotask(() => {
-      if (status !== MachineStatus.Started) return;
-      previousEventRef.current = eventRef.current;
-      eventRef.current = event;
-      const currentState = state.get();
-      const { transitions, source } = findTransition(machine, currentState, event.type);
-      const transition = choose(transitions);
-      if (!transition) return;
-      transitionRef.current = transition;
-      const target = resolveStateValue(machine, transition.target ?? currentState, source);
-      debug("transition", event.type, transition.target || currentState, `(${transition.actions})`);
-      if (target !== currentState) {
-        state.set(target);
-      } else if (transition.reenter) {
-        state.invoke(currentState, currentState);
-      } else {
-        action(transition.actions);
+      if (status === MachineStatus.NotStarted) {
+        pendingEvents.push(event);
+        return;
       }
+      if (status !== MachineStatus.Started) return; // stopped: drop
+      transition(event);
     });
   };
 
@@ -482,7 +534,9 @@ export function createService<T extends MachineSchema>(
       const started = status === MachineStatus.Started;
       status = MachineStatus.Started;
       debug(started ? "rehydrating..." : "initializing...");
-      state.invoke(state.initial, INIT_STATE);
+      state.invoke(state.initial as string, INIT_STATE);
+      // Replay events buffered before start (child components mount first).
+      for (const event of pendingEvents.splice(0)) transition(event);
       // SSR attrs were rendered without event handlers (see normalize-props);
       // force one client recompute so handler-bearing props are applied.
       scheduleUpdate();
@@ -492,6 +546,7 @@ export function createService<T extends MachineSchema>(
       if (status !== MachineStatus.Started) return;
       debug("unmounting...");
       status = MachineStatus.Stopped;
+      pendingEvents.length = 0;
       effects.forEach((fn) => fn?.());
       effects.clear();
       transitionRef.current = null;
