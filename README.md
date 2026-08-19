@@ -1,5 +1,6 @@
 # marko-zag
 
+[![CI](https://github.com/svallory/marko-zag/actions/workflows/ci.yml/badge.svg)](https://github.com/svallory/marko-zag/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/marko-zag)](https://www.npmjs.com/package/marko-zag)
 [![docs](https://img.shields.io/badge/docs-marko--zag.saulo.tech-blue)](https://marko-zag.saulo.tech)
 [![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
@@ -59,6 +60,11 @@ export type Input = MachineInput<"input", switchMachine.Props> & {
 Full guides (SSR & hydration, controlled props, floating elements, the
 hard-won gotchas) and the complete API reference live at
 **[marko-zag.saulo.tech](https://marko-zag.saulo.tech)**.
+
+## Contributing
+
+Bug reports, parity requests, and PRs welcome — see
+[CONTRIBUTING.md](./CONTRIBUTING.md) for setup and conventions.
 
 ## License
 

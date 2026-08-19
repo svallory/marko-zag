@@ -1,0 +1,32 @@
+name: Bug Report
+description: Report a bug in marko-zag
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: What happened, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: >
+        Minimal .marko component (plus the Zag machine package it drives)
+        that reproduces the problem. A repo/StackBlitz link works too.
+      render: marko
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: marko-zag version
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: "Marko version, @zag-js/* machine + version, bundler (marko-run/@marko/vite), runtime, browser."

@@ -4,6 +4,7 @@
   "description": "Zag.js v1 bindings for Marko 6 — SSR-safe state machine adapter",
   "license": "MIT",
   "type": "module",
+  "sideEffects": false,
   "author": {
     "name": "Saulo Vallory",
     "email": "saulo@toki.life",
@@ -11,9 +12,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/svallory/marko-zag"
+    "url": "git+https://github.com/svallory/marko-zag.git"
   },
   "homepage": "https://marko-zag.saulo.tech",
+  "bugs": {
+    "url": "https://github.com/svallory/marko-zag/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./src/*": "./src/*",
@@ -22,7 +29,8 @@
   },
   "files": [
     "src",
-    "marko.json"
+    "marko.json",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "check": "marko-type-check -p ./tsconfig.json -d condensed",
@@ -31,7 +39,9 @@
     "test:browser": "vitest run --config vitest.browser.config.ts",
     "docs:dev": "docmd dev",
     "docs:build": "docmd build",
-    "release": "./scripts/release.sh"
+    "release": "./scripts/release.sh",
+    "prepublishOnly": "bun run check && bun run test",
+    "lint:package": "publint"
   },
   "dependencies": {
     "@zag-js/core": "^1.43.0",
@@ -53,6 +63,7 @@
     "marko": "^6.3.34",
     "playwright": "^1.62.1",
     "playwright-core": "^1.62.1",
+    "publint": "^0.3.24",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
