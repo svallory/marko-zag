@@ -6,6 +6,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-08-20
+
 ### Fixed
 
 - Removed `"sideEffects": false` (added in 1.2.0). Compiled `.marko`
@@ -82,7 +84,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 
 - `stripOwnProps` native-attrs helper.
 
-[Unreleased]: https://github.com/svallory/marko-zag/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/svallory/marko-zag/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/svallory/marko-zag/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/svallory/marko-zag/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/svallory/marko-zag/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/svallory/marko-zag/compare/v1.0.1...v1.1.0
