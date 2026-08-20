@@ -6,6 +6,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-19
+
 ### Fixed
 
 - `PropTypes` is now mapped over **all** of `Marko.NativeTags` (matching the
@@ -67,7 +69,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 
 - `stripOwnProps` native-attrs helper.
 
-[Unreleased]: https://github.com/svallory/marko-zag/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/svallory/marko-zag/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/svallory/marko-zag/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/svallory/marko-zag/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/svallory/marko-zag/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/svallory/marko-zag/releases/tag/v1.0.1
