@@ -6,6 +6,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Removed `"sideEffects": false` (added in 1.2.0). Compiled `.marko`
+  modules perform their resume registrations (`_script`, content
+  registration) as module side effects; declaring the package
+  side-effect-free let bundlers drop the `<portal>` tag's module from
+  client chunks that only referenced it through pure-annotated bindings —
+  the server payload then referenced a registration the client never
+  loaded, crashing Marko's resume in production builds. A glob like
+  `["**/*.marko"]` is NOT a safe alternative: bundler module ids for
+  compiled Marko files carry query params/virtual prefixes the glob won't
+  match, silently reproducing `false`.
+
 ## [1.2.0] - 2026-08-19
 
 ### Fixed

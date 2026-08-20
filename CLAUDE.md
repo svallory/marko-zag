@@ -38,6 +38,12 @@ framework-agnostic state machines inside Marko components. Ported from
   `ssrService` inline, client builds the real one in `onMount`. Tag inputs
   must stay serializable (closures written in the caller's template).
 - No build step: ships raw TS + `.marko` (tags can't be pre-compiled).
+- NEVER add `"sideEffects": false` (or a `.marko` glob) to package.json:
+  compiled `.marko` modules register resume scripts/content as module side
+  effects, and bundlers will drop tag modules from client chunks — the SSR
+  payload then references registrations the client never loads (production
+  resume crash). Globs don't save you: compiled module ids carry query
+  params/virtual prefixes that miss them.
 - Marko re-syncs an input's live `.value` on re-render only when a
   `valueChange` handler exists — Zag machines write `.value`/`.checked` via
   watch effects instead; don't "fix" this.

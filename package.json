@@ -4,7 +4,6 @@
   "description": "Zag.js v1 bindings for Marko 6 — SSR-safe state machine adapter",
   "license": "MIT",
   "type": "module",
-  "sideEffects": false,
   "author": {
     "name": "Saulo Vallory",
     "email": "saulo@toki.life",
