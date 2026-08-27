@@ -15,7 +15,7 @@ import type * as checkbox from "@zag-js/checkbox";
 import type { MachineSchema } from "@zag-js/core";
 import type { MarkoService } from "../src/machine.ts";
 import type { PropTypes } from "../src/prop-types.ts";
-import type { ZagApi, ZagModule } from "../src/zag-module.ts";
+import type { ZagApi, ZagModule, ZagSchema } from "../src/zag-module.ts";
 import type Service from "../src/tags/zag-machine.marko";
 import type { Input as ZagInput } from "../src/tags/zag.marko";
 
@@ -94,6 +94,28 @@ export const apiRootProps: PropTypes["label"] = apiGetter().getRootProps();
 
 // @ts-expect-error the checkbox api has no `getPatternProps` (that is qr-code's)
 export const noForeignPart = apiGetter().getPatternProps();
+
+// --- there is no ZagProps alias, and why ------------------------------------
+
+// `ZagSchema<M>` recovers a module's schema through `Machine<infer T>`, but
+// the schema types its own members loosely: indexing it yields `any`. These
+// pins document that, so nobody reintroduces a `ZagProps<M>` alias believing
+// it constrains anything. (An earlier revision shipped one aliased to the
+// whole schema; `props?:` typed nothing and no assertion caught it.)
+type IsAny<T> = 0 extends 1 & T ? "any" : "notany";
+
+declare const schemaProps: IsAny<ZagSchema<typeof checkbox>["props"]>;
+export const schemaPropsIsAny: "any" = schemaProps;
+
+// A module's OWN exported Props is a real type — this is the precision path,
+// via MachineInput on a component's Input, and it is what the docs point at.
+declare const realProps: IsAny<checkbox.Props>;
+export const moduleOwnPropsIsReal: "notany" = realProps;
+
+// The whole schema still parameterises the service, which is all the tag
+// needs it for.
+declare const svcOverSchema: MarkoService<ZagSchema<typeof checkbox>>;
+export const serviceTakesSchema: MarkoService<any> = svcOverSchema;
 
 // --- old tag names do not resolve ------------------------------------------
 

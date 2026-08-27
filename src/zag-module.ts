@@ -33,10 +33,21 @@ export interface ZagModule {
 export type ZagSchema<M extends ZagModule> =
   M["machine"] extends Machine<infer T> ? T : MachineSchema;
 
-/** The `props` half of a module's machine schema. */
-export type ZagProps<M extends ZagModule> = ZagSchema<M> extends MachineSchema
-  ? ZagSchema<M>
-  : MachineSchema;
+// There is deliberately no `ZagProps<M>` alias.
+//
+// The obvious definition — `ZagSchema<M>["props"]` — resolves to `any` for
+// every real Zag module: `ZagSchema` recovers the schema through
+// `Machine<infer T>`, and the schema types its own members loosely, so
+// indexing it narrows nothing. An alias that always yields `any` is worse
+// than none, because it reads as a constraint at every call site while
+// enforcing nothing (an earlier revision shipped exactly that, aliased to the
+// whole schema, and `props?:` typed nothing at all).
+//
+// A module's own exported `Props` (e.g. `checkbox.Props`) IS a real type, but
+// it is not reachable structurally from `ZagModule` — modules export it under
+// a name, not as a member. Components that want that precision get it from
+// `MachineInput<Tag, checkbox.Props>` on their own `Input`, which is the
+// documented path and is unaffected by any of this.
 
 /**
  * The api object a module's `connect` returns — what `<zag>` yields when
@@ -74,7 +85,7 @@ export interface ZagMachineInput<M extends ZagModule> {
    * Written in the caller's template, so values with methods
    * (`ListCollection`, `DateValue`, `Color`) never cross the input boundary.
    */
-  props?: (picked?: Record<string, any>) => Partial<ZagProps<M>> & Record<string, any>;
+  props?: (picked?: Record<string, any>) => Record<string, any>;
   /** Machine-prop overrides and callback replacements written on the tag. */
   [override: string]: any;
 }

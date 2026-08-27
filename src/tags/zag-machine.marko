@@ -37,7 +37,7 @@
 // module (functions from npm code) throws `Unable to serialize "input"`.
 import { createService, ssrService, type MarkoService } from "../machine.ts";
 import { buildMachineProps } from "../machine-props.ts";
-import type { ZagModule, ZagMachineInput, ZagProps } from "../zag-module.ts";
+import type { ZagModule, ZagMachineInput, ZagSchema } from "../zag-module.ts";
 
 export interface Input<M extends ZagModule> extends ZagMachineInput<M> {}
 
@@ -118,6 +118,6 @@ export interface Input<M extends ZagModule> extends ZagMachineInput<M> {}
 // the value position (a bare `rev,` there is a TS "left side of comma
 // operator is unused" error).
 <const/service=(void rev, machineProps(), () =>
-  (instance ?? ssrService(mod().machine, machineProps)) as MarkoService<ZagProps<M>>
+  (instance ?? ssrService(mod().machine, machineProps)) as MarkoService<ZagSchema<M>>
 )/>
 <return=service/>
