@@ -1,0 +1,34 @@
+// Fixture for the two-way `checkedChange` sugar (criterion a).
+//
+// The component declares NO callback wiring of its own: `checkedChange` is
+// picked up purely by <zag>'s default callback rule, which wraps the picked
+// `onCheckedChange` so it also fires `input.checkedChange(details.checked)`.
+//
+// It is genuinely CONTROLLED: `checked` is a <let> written from that sugar
+// callback and fed straight back in through `from=`. So the assertions below
+// prove both halves at once — the sugar fires, and the machine follows the
+// value the component writes back.
+import * as checkbox from "@zag-js/checkbox";
+
+export interface Input {
+  id: string;
+}
+
+<let/checked=false/>
+<let/sugarCalls=0/>
+
+<zag/api=() => checkbox from={
+  id: input.id,
+  checked,
+  checkedChange(next: boolean) {
+    checked = next;
+    sugarCalls += 1;
+  },
+}/>
+
+<label ...api().getRootProps() class="fx-root">
+  <input ...api().getHiddenInputProps() class="fx-input"/>
+  <span ...api().getControlProps() class="fx-control"/>
+</label>
+<span class="fx-checked">${checked ? "yes" : "no"}</span>
+<span class="fx-calls">${sugarCalls}</span>

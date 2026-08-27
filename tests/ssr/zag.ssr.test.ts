@@ -1,4 +1,4 @@
-// Server-render contract for the <service> tag, exercised through a REAL
+// Server-render contract for the <zag> tag, exercised through a REAL
 // .marko template compiled by @marko/vite and rendered in Node with no DOM.
 //
 // Two things must hold, and only a real render shows them:
@@ -15,7 +15,7 @@ import template from "./ssr-checkbox.marko";
 const render = (input: Record<string, unknown>) =>
   (template as any).render(input).then((res: unknown) => String(res));
 
-describe("<service> under real SSR (node, no DOM)", () => {
+describe("<zag> under real SSR (node, no DOM)", () => {
   it("renders correct initial attributes from the server-side throwaway service", async () => {
     expect(typeof document).toBe("undefined");
     const html = await render({ id: "ssr-cb", defaultChecked: true });
@@ -44,5 +44,14 @@ describe("<service> under real SSR (node, no DOM)", () => {
     for (const leak of ["getStatus", "propsChanged", "machineStatus", "bindablePrevSyncs"]) {
       expect(html).not.toContain(leak);
     }
+  });
+});
+
+describe("<zag> input validation", () => {
+  it("throws a clear error when neither from= nor props= is given", async () => {
+    const template = (await import("./ssr-zag-noinput.marko")).default;
+    await expect((template as any).render({}).then(String)).rejects.toThrow(
+      /requires `from=`.*or `props=`/s,
+    );
   });
 });

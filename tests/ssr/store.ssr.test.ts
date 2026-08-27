@@ -1,4 +1,4 @@
-// Server-render contract for <store>: a snapshot spread onto an element must
+// Server-render contract for <zag-store>: a snapshot spread onto an element must
 // serialize.
 //
 // Spreading is what makes the browser reference the getter, and an
@@ -8,12 +8,12 @@
 // triggers it, which is why this went unnoticed; the spread is the point of
 // this test.
 import { describe, expect, it } from "vitest";
-import template from "./ssr-store.marko";
+import template from "./ssr-zag-store.marko";
 
 const render = (input: Record<string, unknown>) =>
   (template as any).render(input).then((res: unknown) => String(res));
 
-describe("<store> under real SSR (node, no DOM)", () => {
+describe("<zag-store> under real SSR (node, no DOM)", () => {
   it("serializes a snapshot spread onto an element", async () => {
     expect(typeof document).toBe("undefined");
     const html = await render({ label: "toasts" });

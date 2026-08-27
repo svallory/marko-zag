@@ -1,4 +1,4 @@
-// Server-rendered fixture for the <store> serialization regression.
+// Server-rendered fixture for the <zag-store> serialization regression.
 //
 // The load-bearing detail is the SPREAD: `...snap().attrs` makes the browser
 // reference the store getter, which forces Marko to serialize it. A snapshot
@@ -8,7 +8,7 @@ export interface Input {
   label: string;
 }
 
-<store/snap
+<zag-store/snap
   subscribe=(onChange: () => void) => () => {}
   snapshot=() => ({ attrs: { "data-count": "1", role: "status" }, count: 1 })
 />

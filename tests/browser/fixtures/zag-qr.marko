@@ -7,11 +7,10 @@
 //
 // So nothing on the machine side can invalidate `api` here. The only thing
 // that can is the props path: a reactive read inside the caller's props
-// closure gives that closure a fresh identity, which <service> reads when
+// closure gives that closure a fresh identity, which <zag-machine> reads when
 // deriving the getter. This is the case that historically went stale
 // (marko-ui 79ff534f).
 import * as qrCode from "@zag-js/qr-code";
-import { normalizeProps } from "../../../src/normalize-props.ts";
 
 export interface Input {
   id: string;
@@ -19,9 +18,7 @@ export interface Input {
 }
 
 <let/value=input.value/>
-<machine-props/machineProps from={ id: input.id, value } pick=qrCode.props/>
-<service/service machine=() => qrCode.machine props=machineProps/>
-<const/api=() => qrCode.connect(service(), normalizeProps)/>
+<zag/api=() => qrCode from={ id: input.id, value }/>
 
 <div ...api().getRootProps() class="fx-qr-root">
   <svg ...api().getFrameProps()>

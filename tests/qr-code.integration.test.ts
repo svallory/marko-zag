@@ -1,5 +1,5 @@
 /**
- * Pins the machine-side fact the <service> getter's props dependency exists
+ * Pins the machine-side fact the <zag-machine> getter's props dependency exists
  * for: @zag-js/qr-code's `value` prop feeds ONLY `computed(...)`.
  *
  * Changing it performs no bindable write and triggers no state transition, so
