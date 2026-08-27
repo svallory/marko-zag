@@ -56,6 +56,10 @@ export interface Input<M extends ZagModule> extends ZagMachineInput<M> {}
 // below: a check deferred to the closure would only fire on the first render
 // that reads props, turning a wiring mistake into a render-time error far
 // from its cause.
+//
+// `validated` is SIDE-EFFECT-ONLY and deliberately never read — a <const> is
+// the tag-level way to run a check once at setup. Its value exists solely
+// because a <const> must have one; do not "clean up" the unused binding.
 <const/validated=(() => {
   if (!input.from && !input.props) {
     throw new Error(
