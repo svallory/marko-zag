@@ -24,34 +24,49 @@ consumed directly.
 
 ## The pattern
 
-The four tags (`<machine-props>`, `<service>`, `<portal>`, `<store>`) are
+The four tags (`<zag>`, `<zag-machine>`, `<zag-portal>`, `<zag-store>`) are
 auto-discovered from the package's taglib — no imports in `.marko` files.
-`<service>` returns a service getter, so the two load-bearing lines read the
-same as Zag's own two:
+One tag owns the whole machine wiring:
 
 ```marko
 import * as switchMachine from "@zag-js/switch";
-import { normalizeProps, type MachineInput } from "marko-zag";
+import type { MachineInput } from "marko-zag";
 
 export type Input = MachineInput<"input", switchMachine.Props> & {
   checkedChange?: (checked: boolean) => void;
 };
 
-// 1. pick the machine's props from this component's input
-<machine-props/machineProps from=input pick=switchMachine.props
-  onCheckedChange(details) { input.checkedChange?.(details.checked) }/>
-
-// 2. run the machine (SSR-safe: server renders a never-started one)
-<service/service machine=() => switchMachine.machine props=machineProps/>
-
-// 3. connect the api, then spread the prop getters onto native tags
-<const/api=() => switchMachine.connect(service(), normalizeProps)/>
+// Runs the machine and connects the api. SSR-safe: the server renders from
+// a never-started throwaway, so the initial attributes are correct with no
+// DOM access. `from=input` picks the machine's own props out of this
+// component's input and wires `checkedChange` to Zag's `onCheckedChange`.
+<zag/api=() => switchMachine from=input/>
 
 <label ...api().getRootProps()>
   <input ...api().getHiddenInputProps()>
   <span ...api().getControlProps()><span ...api().getThumbProps()/></span>
-  <span ...api().getLabelProps()><${input.renderBody}/></span>
+  <span ...api().getLabelProps()><${input.content}/></span>
 </label>
+```
+
+`api` is a **getter** — call it at every use site. Its identity changes on
+every machine transition and on every change to a controlled prop, which is
+what makes the spreads above recompute with no dependency list.
+
+Attributes written on the tag override what `from=` supplied, so pinning a
+value or replacing a callback is a one-liner:
+
+```marko
+<zag/api=() => dialog from=input role="dialog"
+  onOpenChange(details) { input.onOpenChange?.(details); track(details.open) }/>
+```
+
+When a component needs the service itself, `<zag-machine>` returns it and
+`connect()` builds the api:
+
+```marko
+<zag-machine/service=() => toast props=() => ({ ...input.options() })/>
+<const/api=() => connect(toast, service())/>
 ```
 
 ## Documentation
