@@ -6,6 +6,169 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.0.0-rc.2] - 2026-08-27
+
+### Changed
+
+- **BREAKING** — every tag is renamed under a `zag-` prefix:
+  `<service>` → `<zag-machine>`, `<store>` → `<zag-store>`,
+  `<portal>` → `<zag-portal>`.
+- **BREAKING** — `<zag-machine>`'s value shorthand is now the **module**
+  getter (`() => switchMachine`), not the machine getter. The tag reads
+  `.machine` for the interpreter and `.props` for the name list it picks out
+  of `from=`, so a component never repeats the module name. It still returns
+  the service getter, unchanged.
+- **BREAKING** — the `<machine-props>` tag is **deleted**. Its job — pick the
+  machine-owned props out of a component's input, generate an `id`, merge
+  the tag's own attributes as overrides — is now the `from=` attribute on
+  `<zag>` and `<zag-machine>`.
+
+### Added
+
+- **`<zag>`** — the whole machine wiring in one tag. It is `<zag-machine>`
+  plus the connect line, returning the **api getter**:
+
+  ```marko
+  <zag/api=() => switchMachine from=input/>
+  <label ...api().getRootProps()>
+  ```
+
+  Identity contract is unchanged: a fresh closure per machine notify and per
+  tracked props change, so every `api()` spread recomputes with no
+  hand-written dependency list.
+- **A default callback rule.** A picked machine prop matching
+  `on<X>Change` is wrapped automatically when the component supplies either
+  Zag's `onXChange` or Marko's bind-shorthand `xChange`. The wrapper forwards
+  the details object, then — only when `x in details` — calls
+  `xChange(details[x])`. A component declaring nothing but a
+  `checkedChange?: (checked: boolean) => void` input therefore supports
+  `<Switch checked:=myState/>` with no callback code of its own.
+
+  The `x in details` guard is deliberate: `onTriggerValueChange` matches the
+  name pattern but carries `details.value`, so its `triggerValueChange` half
+  correctly never fires. Callbacks that are not `on<X>Change` at all —
+  `onValueComplete`, `onPositionChangeEnd`/`onSizeChangeEnd`,
+  `onCollapse`/`onExpand` (called as `(panelId, size)`), `onTick`,
+  `onSelect`, `onValueCommit`, `onComplete`, `onResizeStart` — generate no
+  wrapper and are passed to the machine untouched. Write an override
+  attribute on the tag where you want more.
+- **`props=` composes with `from=`.** When both are given, `props=` receives
+  the picked-and-adapted props and its return value is what the machine gets.
+  That is the serialization-safe place to build a `ListCollection`, an
+  `@internationalized/date` value, or a `Color` — class instances that throw
+  `Unable to serialize "input"` if they cross the tag-input boundary, but
+  never cross when born inside a closure written in your own template.
+- **`connect(mod, service, normalize?)`** — the plain-function half of
+  `<zag>`, for components that own the service via `<zag-machine>`. Equal to
+  `mod.connect(service, normalize ?? normalizeProps)`, typed so the api
+  infers from the module. `normalizeProps` remains exported.
+- **`normalize=`** on `<zag>` swaps the prop normalizer.
+
+Exactly one of `from=` / `props=` is required; passing neither throws at
+setup with a message naming both.
+
+### Migration
+
+#### From 2.0.0-rc.1
+
+Rename the tags, and collapse the two-line block into one:
+
+```marko
+<!-- before (rc.1) -->
+<machine-props/machineProps from=input pick=switchMachine.props
+  onCheckedChange(details) {
+    input.onCheckedChange?.(details);
+    input.checkedChange?.(details.checked);
+  }/>
+<service/service machine=() => switchMachine.machine props=machineProps/>
+<const/api=() => switchMachine.connect(service(), normalizeProps)/>
+
+<!-- after (rc.2) -->
+<zag/api=() => switchMachine from=input/>
+```
+
+The callback block disappears: forwarding `onCheckedChange` and unwrapping
+for `checkedChange` is now the default. Keep an explicit callback only where
+you do something extra, or where the details key does not match the name.
+
+`<store>` → `<zag-store>` and `<portal>` → `<zag-portal>` are pure renames.
+
+When a component wraps the picked props in a second closure to add a
+collection, that closure becomes `props=`:
+
+```marko
+<!-- before (rc.1) -->
+<machine-props/machineProps from=input pick=select.props .../>
+<const/serviceProps=() => ({ ...machineProps(), collection: buildCollection(items) })/>
+<service/service machine=() => select.machine props=serviceProps/>
+<const/api=() => select.connect(service(), normalizeProps)/>
+
+<!-- after (rc.2) -->
+<zag/api=() => select from=input props=(picked) => ({
+  ...picked,
+  collection: buildCollection(items),
+})/>
+```
+
+When a component needs the service itself, keep `<zag-machine>` and use
+`connect()`:
+
+```marko
+<!-- before (rc.1) -->
+<service/service machine=() => toast.machine props=toastProps/>
+<const/api=() => toast.connect(service(), normalizeProps)/>
+
+<!-- after (rc.2) -->
+<zag-machine/service=() => toast props=toastProps/>
+<const/api=() => connect(toast, service())/>
+```
+
+#### From 1.x
+
+The three-tag block collapses to one line:
+
+```marko
+<!-- before (1.x) -->
+<machine-props/machineProps from=input pick=accordion.props/>
+<service/service machine=() => accordion.machine props=machineProps/>
+<connect/api=(service, normalizeProps) =>
+  accordion.connect(service, normalizeProps)
+  service=service
+/>
+
+<!-- after (2.0.0-rc.2) -->
+<zag/api=() => accordion from=input/>
+```
+
+`api` is a **getter** — call it at every use site (`api().getRootProps()`),
+and note that `<connect>` and the `ServiceHandle` object are both gone. The
+handle's fields have no replacements; use the getter itself:
+
+- **`service.service` → `service()`** (from `<zag-machine>`). In `onMount`
+  this is equivalent: every ancestor's machine has already mounted.
+- **`service.machine()`** → import the machine module directly.
+- **`service.props`** → pass your own `props=` closure.
+- **`service.rev` as a `<script>` dependency → `service`.** A bare
+  `service;` is a valid dependency read, and the getter's identity now
+  changes on every update:
+
+  ```marko
+  <script>
+    service;          // was: service.rev;
+    uiValue = api();
+  </script>
+  ```
+
+- **Cross-service threading (`groupRevision=service.rev`) → thread the
+  getter.** Pass `service` itself as the prop; its identity changes on every
+  notify, so the child re-derives.
+- **`connectFresh` helpers** that hand-rolled `<connect>`'s body against the
+  raw handle are now just `<zag>`, or `connect(mod, service())`.
+
+`normalizeProps` is no longer passed for you inside `<connect>`, but `<zag>`
+and `connect()` both apply it by default, so most components stop importing
+it entirely.
+
 ## [2.0.0-rc.1] - 2026-08-27
 
 ### Changed
@@ -186,7 +349,8 @@ service.rev                           service
 
 - `stripOwnProps` native-attrs helper.
 
-[Unreleased]: https://github.com/svallory/marko-zag/compare/v2.0.0-rc.1...HEAD
+[Unreleased]: https://github.com/svallory/marko-zag/compare/v2.0.0-rc.2...HEAD
+[2.0.0-rc.2]: https://github.com/svallory/marko-zag/compare/v2.0.0-rc.1...v2.0.0-rc.2
 [2.0.0-rc.1]: https://github.com/svallory/marko-zag/compare/v1.2.1...v2.0.0-rc.1
 [1.2.1]: https://github.com/svallory/marko-zag/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/svallory/marko-zag/compare/v1.1.1...v1.2.0
