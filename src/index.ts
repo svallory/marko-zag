@@ -4,21 +4,25 @@
  * An SSR-safe adapter that runs Zag's framework-agnostic state machines
  * inside Marko 6 components. The TypeScript surface (this module) provides
  * the machine runtime ({@link createService}, {@link ssrService}), the
- * Marko-flavored {@link normalizeProps} and {@link mergeProps}, the
+ * Marko-flavored {@link normalizeProps}, {@link connect} and
+ * {@link mergeProps}, the
  * floating-ui {@link positionerStyle} constant, the {@link stripOwnProps}
  * native-attrs helper, and the {@link MachineInput} / {@link PropTypes}
  * helper types.
  *
- * The Marko surface — the `<machine-props>`, `<service>`, `<portal>`, and
- * `<store>` tags — is auto-discovered through this package's `marko.json`
- * taglib; no import is needed inside `.marko` files.
+ * The Marko surface — the `<zag>`, `<zag-machine>`, `<zag-portal>`, and
+ * `<zag-store>` tags — is auto-discovered through this package's
+ * `marko.json` taglib; no import is needed inside `.marko` files.
  *
  * @packageDocumentation
  */
 export { createService, ssrService, type MarkoService } from "./machine.ts";
 export { normalizeProps } from "./normalize-props.ts";
+export { connect } from "./connect.ts";
 export { mergeProps } from "./merge-props.ts";
 export { positionerStyle } from "./positioner-style.ts";
 export { stripOwnProps } from "./native-attrs.ts";
 export type { MachineInput } from "./machine-input.ts";
 export type { PropTypes } from "./prop-types.ts";
+export type { ZagModule, ZagApi, ZagSchema, ZagService } from "./zag-module.ts";
+export { adaptChangeCallback, buildMachineProps } from "./machine-props.ts";
