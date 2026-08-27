@@ -27,7 +27,7 @@ directly only for custom integrations (e.g. spawned child services).
 | --- | --- | --- |
 | `machine` | `any` | The Zag machine definition (e.g. `switchMachine.machine`). |
 | `userProps` | `() => Record<string, any>` | Closure returning the machine's props. Read lazily and memoized; call [`propsChanged()`](/api/marko-service/) after reactive props change to invalidate the cache. |
-| `notify` | `() => void` | Called (batched on a microtask) after every machine update; the host uses it to schedule a re-render — typically by bumping a `<let/rev>` signal. |
+| `notify` | `() => void` | Called (batched on a microtask) after every machine update; the host uses it to schedule a re-render — typically by bumping a counter `<let>` whose new value gives derived values fresh identity. |
 
 ## Returns
 

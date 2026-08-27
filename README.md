@@ -22,14 +22,16 @@ Requires Marko `^6.3.34` and a **Marko-aware bundler** (marko-run or
 tags cannot be pre-compiled by a library, and the TypeScript exports are
 consumed directly.
 
-## The three-tag pattern
+## The pattern
 
-The five tags (`<machine-props>`, `<service>`, `<connect>`, `<portal>`, `<store>`) are
-auto-discovered from the package's taglib — no imports in `.marko` files:
+The four tags (`<machine-props>`, `<service>`, `<portal>`, `<store>`) are
+auto-discovered from the package's taglib — no imports in `.marko` files.
+`<service>` returns a service getter, so the two load-bearing lines read the
+same as Zag's own two:
 
 ```marko
 import * as switchMachine from "@zag-js/switch";
-import type { MachineInput } from "marko-zag";
+import { normalizeProps, type MachineInput } from "marko-zag";
 
 export type Input = MachineInput<"input", switchMachine.Props> & {
   checkedChange?: (checked: boolean) => void;
@@ -42,11 +44,8 @@ export type Input = MachineInput<"input", switchMachine.Props> & {
 // 2. run the machine (SSR-safe: server renders a never-started one)
 <service/service machine=() => switchMachine.machine props=machineProps/>
 
-// 3. connect the api and spread the prop getters onto native tags
-<connect/api=(service, normalizeProps) =>
-  switchMachine.connect(service, normalizeProps)
-  service=service
-/>
+// 3. connect the api, then spread the prop getters onto native tags
+<const/api=() => switchMachine.connect(service(), normalizeProps)/>
 
 <label ...api().getRootProps()>
   <input ...api().getHiddenInputProps()>

@@ -78,13 +78,50 @@ handler's second argument. If you attach Zag-provided handlers *without*
 going through `normalizeProps`, machine internals will misbehave in
 hard-to-trace ways.
 
-## Raw machines and connect functions don't serialize
+## Raw machines don't serialize
 
 `<service machine=dialogMachine.machine/>` throws
-`Unable to serialize "input"` under SSR. Always pass template-written
-closures: `machine=() => dialogMachine.machine`, and write the connect
-closure inline in `<connect/api=(service, normalizeProps) => ...>`.
-See [SSR & Hydration](/guides/ssr-and-hydration/) for the full reasoning.
+`Unable to serialize "input"` under SSR. Always pass a template-written
+closure: `machine=() => dialogMachine.machine`. See
+[SSR & Hydration](/guides/ssr-and-hydration/) for the full reasoning.
+
+## Returning a service object instead of a getter fails *silently* on the server
+
+This is the nastiest failure mode in the whole adapter, because the loud
+`Unable to serialize "input"` error only fires for tag **input**. A tag
+**variable** fails quietly.
+
+```marko
+<return=ssrService(machine, props)/>   <!-- renders fine, breaks on the client -->
+```
+
+The server does not throw. Marko serializes the service object with every
+function silently stripped — the payload comes back as bare data like
+`{state:{initial:"ready"},context:{},scope:{id:"x"},refs:{},event:{type:""}}`
+— the page renders with correct markup, and the first client read dies with
+`Uncaught TypeError: r is not a function`.
+
+This is why `<service>` returns a **getter**: a closure written in a
+template is the only serializable stand-in for a service, and calling it
+defers the real-vs-throwaway choice to call time.
+
+## A `<script>` that reads a `<let>` it also writes re-subscribes on itself
+
+`<script>` compiles to an effect keyed on every binding it **reads**
+(assignment alone creates no dependency). So a block that reads and writes
+the same `<let>` re-runs on its own notifications, aborting and
+re-subscribing every time:
+
+```marko
+<script>x += 1</script>   <!-- reads x AND writes x: re-runs on every x change -->
+<script>x = 1</script>    <!-- assignment only: no dependency on x -->
+```
+
+The consequence for this adapter: **service creation and `props()` tracking
+must never share one `<script>`**. Put the machine's construction in
+`<lifecycle onMount>` and keep the props-tracking `<script>` separate — a
+single block doing both reads `props()`, so every prop change would tear
+down and rebuild the service.
 
 ## Effects fire two frames late — on purpose
 

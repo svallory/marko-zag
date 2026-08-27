@@ -1,24 +1,40 @@
 ---
-title: "The Three-Tag Pattern"
-description: "How machine-props, service, and connect wire a Zag machine into a Marko component."
+title: "The Component Pattern"
+description: "How machine-props and service wire a Zag machine into a Marko component."
 ---
 
-# The Three-Tag Pattern
+# The Component Pattern
 
-Every Zag integration in marko-zag follows the same three steps, one tag
-each. It is the Marko analog of Zag's two-step `useMachine` + `connect`
-idiom, with one extra tag that solves a Marko-specific problem (input
-serialization — see below).
+Every Zag integration in marko-zag follows the same three steps. Two are
+tags; the third is a plain `<const>`.
 
 1. **`<machine-props>`** — picks the machine-owned props out of your
    component's input and returns a props *closure*.
 2. **`<service>`** — owns the machine lifecycle: creates and starts the real
-   service on the client, provides the SSR fallback recipe on the server.
-3. **`<connect>`** — derives the connected API (the object full of
-   `get*Props()` functions) and keeps it fresh across machine updates.
+   service on the client, and returns a service **getter** that yields a
+   never-started throwaway on the server.
+3. **`<const/api=...>`** — calls the machine's own `connect()`. No tag
+   needed: `<const>` is Marko's re-running render code, which is exactly
+   where Zag expects `connect` to be called.
 
-Overlay components add a fourth tag, **`<portal>`**, to render content at
+Overlay components add one more tag, **`<portal>`**, to render content at
 `document.body`.
+
+The last two steps are the Marko analog of Zag's own two lines:
+
+```ts
+const service = useMachine(accordion.machine, { id: useId() })
+const api = accordion.connect(service, normalizeProps)
+```
+
+```marko
+<service/service machine=() => accordion.machine props=machineProps/>
+<const/api=() => accordion.connect(service(), normalizeProps)/>
+```
+
+The two differences are irreducible Marko taxes: the `() =>` wrappers,
+because tag input is serialized for resume, and calling `api()` at use
+sites, because the value is a getter.
 
 ## Worked example: a dialog
 
@@ -30,7 +46,7 @@ trimmed for clarity — this is the exact wiring used by
 ```marko
 /* dialog.marko */
 import * as dialogMachine from "@zag-js/dialog";
-import type { MachineInput } from "marko-zag";
+import { normalizeProps, type MachineInput } from "marko-zag";
 
 export type Input = MachineInput<"div", dialogMachine.Props> & {
   /** Marko-friendly sugar so callers can write `open:=state.showDialog` */
@@ -56,13 +72,9 @@ export type Input = MachineInput<"div", dialogMachine.Props> & {
 //    serialization wall ("Unable to serialize input").
 <service/service machine=() => dialogMachine.machine props=machineProps/>
 
-// 3. Connect. The value shorthand holds the connect closure (again written
-//    in the template, for the same serialization reason). `api` is a getter
-//    you CALL at use sites: `api().getTriggerProps()`.
-<connect/api=(service, normalizeProps) =>
-  dialogMachine.connect(service, normalizeProps)
-  service=service
-/>
+// 3. Connect — a plain <const>, calling the machine's own connect(). `api`
+//    is a getter you CALL at use sites: `api().getTriggerProps()`.
+<const/api=() => dialogMachine.connect(service(), normalizeProps)/>
 
 // Render: spread the prop getters onto native tags.
 <if=input.trigger>
@@ -120,32 +132,43 @@ lets `<service>` re-read it reactively when controlled props change.
 
 ### `<service>` — the machine lifecycle owner
 
-The Marko analog of `useMachine(machine, props)`. It returns a serializable
-**handle** `{ service, machine, props, rev }`:
+The Marko analog of `useMachine(machine, props)`. It returns a service
+**getter**: `service()` yields the running machine on the client after
+mount, and a never-started throwaway on the server and before mount. Zag's
+`connect()` is a pure read over the service, so connecting the throwaway
+renders correct initial attributes with zero DOM access.
 
-- `service` is the running machine on the client, and `null` during SSR —
-  the client builds its own instance in `onMount` and starts it.
-- `rev` is a counter bumped on every machine update, giving the handle fresh
-  identity so everything derived from it recomputes.
-- `machine` and `props` are forwarded so `<connect>` can build the SSR
-  fallback.
+A getter rather than the service object is load-bearing, and not merely a
+style choice. Returning the service itself does **not** throw on the server:
+Marko serializes it with every function silently stripped, the page renders,
+and the first client read dies with `TypeError: … is not a function`. A
+closure written in a template is the only serializable stand-in for a
+service, and calling it defers the real-vs-throwaway choice to call time.
 
-It also watches your props closure: any reactive value read inside
+The getter's **identity** is the change signal. Marko's `<const>` propagates
+a new value only when it is `!==` the old one, so `<service>` returns a
+*fresh closure* on every machine update and on every change to a value read
+inside your props closure. That is what makes
+`<const/api=() => m.connect(service(), normalizeProps)/>` recompute — both
+when the machine transitions and when a controlled prop changes — with no
+hand-written dependency list anywhere.
+
+`<service>` also watches your props closure: any reactive value read inside
 `machineProps()` (a controlled `open=`, a changing `disabled=`) re-notifies
-the machine automatically — no hand-typed dependency lists.
+the machine automatically.
 
-### `<connect>` — the API deriver
+Any number of `<const>`s may derive from one `<service>`, and the getter can
+be threaded into child components as ordinary tag input when a child needs
+the parent's machine.
 
-The Marko analog of `connect(service, normalizeProps)`. It returns the API
-as a **getter** — you write `api().getTriggerProps()`, not
+### `<const/api=...>` — the API deriver
+
+There is no tag here, and that is the point: Zag's `useMachine` never learns
+about `connect`; the author calls `connect` in render code that re-runs.
+Marko's re-running render code is `<const>`.
+
+`api` is a **getter** — you write `api().getTriggerProps()`, not
 `api.getTriggerProps()` — so every read observes the latest machine state.
-During SSR the handle carries no running service, so `<connect>` builds a
-throwaway never-started one from the handle's `machine`/`props`; Zag's
-`connect()` is a pure read, so this renders correct initial attributes with
-zero DOM access.
-
-Several `<connect>`s may share one `<service>` (e.g. connecting the same
-machine's API in a parent and a repeated child).
 
 ### `<portal>` — SSR-safe overlay rendering
 

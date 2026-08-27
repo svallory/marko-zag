@@ -35,14 +35,12 @@ A never-started `MarkoService`, safe to pass to a machine module's
 
 ## Example
 
-This is exactly what the [`<connect>`](/api/tags/#connect) tag does
-internally:
+This is exactly what the [`<service>`](/api/tags/#service) tag's getter does
+internally — picking the real service when there is one, and a throwaway
+otherwise:
 
 ```ts
-input.value(
-  handle.service ?? ssrService(handle.machine(), handle.props),
-  normalizeProps,
-)
+() => instance ?? ssrService(machine(), props)
 ```
 
 ## Remarks

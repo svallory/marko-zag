@@ -5,7 +5,7 @@
 //   <store/toasts subscribe=(cb) => toastStore.subscribe(cb) snapshot=() => toastStore.getState()/>
 //   <for|item| of=toasts().toasts> ... </for>
 //
-// Returns a GETTER (same idiom as <connect>): call `toasts()` at use sites.
+// Returns a GETTER (same idiom as <service>): call `toasts()` at use sites.
 // Subscribes on mount, unsubscribes on destroy. During SSR the getter
 // returns `serverSnapshot` (falling back to `snapshot`) — same contract as
 // React's third useSyncExternalStore argument.
@@ -34,9 +34,14 @@ export interface Input<T = unknown> {
 />
 // The eager `rev` read (the IIFE argument) is the reactive dependency:
 // every store notification bumps rev, recomputing the const and giving
-// consumers a fresh getter identity (same idiom as <connect>'s comma
-// expression — an IIFE here because TS rejects a bare identifier on the
-// left of a comma).
+// consumers a fresh getter identity.
+//
+// NOTE: the IIFE keeps this closure UNREGISTERED, so it cannot be
+// serialized if a consumer ever references it from the browser — spreading
+// `toasts()` onto an element would fail with `Unable to serialize`. That is
+// fine for a store snapshot, which is read in body content, but it is why
+// <service> writes its arrow directly as the <const> value instead (the
+// compiler then wraps it in `_resume(...)`).
 <const/value=((_rev: number) => () =>
   typeof document === "undefined"
     ? (input.serverSnapshot ?? input.snapshot)()

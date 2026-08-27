@@ -1,14 +1,17 @@
 ---
 title: "Tags"
-description: "The five Marko tags: machine-props, service, connect, portal, store."
+description: "The four Marko tags: machine-props, service, portal, store."
 ---
 
 # Tags
 
-marko-zag ships five tags, auto-discovered from the package's `marko.json`
+marko-zag ships four tags, auto-discovered from the package's `marko.json`
 taglib — no imports needed in `.marko` files. They compose in a fixed order;
-see [The Three-Tag Pattern](/guides/three-tag-pattern/) for the full worked
+see [The Component Pattern](/guides/component-pattern/) for the full worked
 example.
+
+Connecting the api is not a tag: `<service>` returns a service getter, so a
+plain `<const>` calling the machine's own `connect()` is all it takes.
 
 ## `<machine-props>`
 
@@ -59,43 +62,36 @@ Creates and owns a running Zag service — the Marko analog of
 
 ### Returns
 
-A serializable `ServiceHandle`:
+A service **getter**: `() => MarkoService<T>`.
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `service` | `MarkoService \| null` | Running service on the client; `null` during SSR. |
-| `machine` | `() => any` | Forwarded getter, for `<connect>`'s SSR fallback. |
-| `props` | `() => Record<string, any>` | Forwarded props closure. |
-| `rev` | `number` | Update counter — fresh handle identity per machine update. |
-
-The tag tracks every reactive read inside your props closure: controlled
-props re-notify the machine with no hand-typed dependency list.
-
-## `<connect>`
-
-Derives the connected API from a `<service>` handle — the Marko analog of
-`connect(service, normalizeProps)`. Returns the API as a **getter** you call
-at use sites.
+`service()` returns the real running service on the client after mount, and
+a never-started throwaway on the server and before mount. Zag's `connect()`
+is a pure read over the service, so connecting the throwaway renders correct
+initial attributes with no DOM access.
 
 ```marko
-<connect/api=(service, normalizeProps) =>
-  switchMachine.connect(service, normalizeProps)
-  service=switchService
-/>
+<service/service machine=() => switchMachine.machine props=machineProps/>
+<const/api=() => switchMachine.connect(service(), normalizeProps)/>
 <label ...api().getRootProps()>
 ```
 
-### Input
+The getter's **identity** changes on every machine update and on every change
+to a value read inside your props closure. Marko's `<const>` propagates only
+a value that is `!==` the previous one, so that identity change is what makes
+the `api` line above recompute — for machine transitions and controlled-prop
+changes alike, with no hand-written dependency list.
 
-| Attribute | Type | Description |
-| --- | --- | --- |
-| *(value shorthand)* | `(service, normalizeProps) => Api` | The connect closure — written in your template (raw `switchMachine.connect` as input is unserializable). |
-| `service` | `ServiceHandle` | Handle returned by `<service>`. |
+The tag also tracks every reactive read inside your props closure, so
+controlled props re-notify the machine automatically.
 
-During SSR the handle carries no running service, so a throwaway
-never-started one is built from the handle's `machine`/`props`; Zag's
-`connect()` is a pure read, so this renders correct initial attributes.
-Several `<connect>`s may share one `<service>`.
+Any number of `<const>`s may derive from one `<service>`, and the getter can
+be passed into child components as ordinary tag input.
+
+> **Why a getter and not the service?** Returning the service object does
+> not throw on the server — Marko serializes it with every function silently
+> stripped, the page renders, and the first client read fails with
+> `TypeError: … is not a function`. See
+> [Landmines & Gotchas](/guides/gotchas/).
 
 ## `<portal>`
 
@@ -135,7 +131,7 @@ Marko analog of the official adapters' `useSyncExternalStore`: bridges an
 external subscribe/snapshot store — Zag's toast store from
 `toast.createStore`, or any `@zag-js/store` proxy — into Marko reactivity.
 Subscribes on mount, unsubscribes on destroy; returns a **getter** (same
-idiom as `<connect>`).
+idiom as `<service>`).
 
 ```marko
 <store/toasts

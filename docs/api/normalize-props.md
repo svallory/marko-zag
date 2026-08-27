@@ -11,8 +11,7 @@ const normalizeProps: PropNormalizer; // from @zag-js/types createNormalizer
 
 Zag's machines emit React-flavored prop objects; `normalizeProps` maps them
 onto Marko DOM attributes. Pass it as the second argument of a machine
-module's `connect()` — or use the [`<connect>`](/api/tags/#connect) tag,
-which passes it for you.
+module's `connect()`.
 
 ## What it translates
 
@@ -52,10 +51,8 @@ lowercase name keeps it a single in-place attribute write.
 ## Example
 
 ```marko
-<connect/api=(service, normalizeProps) =>
-  switchMachine.connect(service, normalizeProps)
-  service=switchService
-/>
+<service/service machine=() => switchMachine.machine props=machineProps/>
+<const/api=() => switchMachine.connect(service(), normalizeProps)/>
 <label ...api().getRootProps()>
 ```
 

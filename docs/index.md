@@ -18,8 +18,10 @@ registry is built on.
 
 ## What you get
 
-- **Four Marko tags** — `<machine-props>`, `<service>`, `<connect>`, and
-  `<portal>` — auto-discovered via the package's `marko.json` taglib.
+- **Four Marko tags** — `<machine-props>`, `<service>`, `<portal>`, and
+  `<store>` — auto-discovered via the package's `marko.json` taglib.
+  `<service>` returns a service getter, so connecting the api is a plain
+  `<const>` rather than a tag of its own.
 - **`normalizeProps`** — maps Zag's React-style prop objects onto Marko DOM
   attributes (including the focus-preserving `tabIndex` → `tabindex` fix).
 - **SSR-safety by construction** — the server renders correct initial
@@ -37,7 +39,7 @@ bun add marko-zag @zag-js/switch
 
 ```marko
 import * as switchMachine from "@zag-js/switch";
-import type { MachineInput } from "marko-zag";
+import { normalizeProps, type MachineInput } from "marko-zag";
 
 export type Input = MachineInput<"input", switchMachine.Props> & {
   checkedChange?: (checked: boolean) => void;
@@ -49,10 +51,7 @@ export type Input = MachineInput<"input", switchMachine.Props> & {
     input.checkedChange?.(details.checked);
   }/>
 <service/service machine=() => switchMachine.machine props=machineProps/>
-<connect/api=(service, normalizeProps) =>
-  switchMachine.connect(service, normalizeProps)
-  service=service
-/>
+<const/api=() => switchMachine.connect(service(), normalizeProps)/>
 
 <label ...api().getRootProps()>
   <input ...api().getHiddenInputProps()>
@@ -66,13 +65,22 @@ export type Input = MachineInput<"input", switchMachine.Props> & {
 ```
 
 That's the whole integration: pick the machine's props from your component's
-input, run the machine in a `<service>`, `<connect>` the API, and spread the
-prop getters onto native tags.
+input, run the machine in a `<service>`, call the machine's `connect()` in a
+`<const>`, and spread the prop getters onto native tags.
+
+Compare Zag's own two lines — the Marko version reads the same way, with
+`() =>` wrappers because tag input is serialized, and `api()` at use sites
+because the value is a getter:
+
+```ts
+const service = useMachine(accordion.machine, { id: useId() })
+const api = accordion.connect(service, normalizeProps)
+```
 
 ## Next steps
 
 - [Installation](/installation/) — bundler requirements and taglib discovery.
-- [The Three-Tag Pattern](/guides/three-tag-pattern/) — a full worked
+- [The Component Pattern](/guides/component-pattern/) — a full worked
   example wiring `@zag-js/dialog`.
 - [SSR & Hydration](/guides/ssr-and-hydration/) — how the server/client
   boundary works.
