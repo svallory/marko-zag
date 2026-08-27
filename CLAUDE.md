@@ -53,9 +53,9 @@ framework-agnostic state machines inside Marko components. Ported from
   compiler wraps a directly-written closure in `_resume(...)`, registering
   it so it can be serialized once the browser references it — which happens
   as soon as a consumer spreads `api()` onto an element. An IIFE wrapper
-  (the idiom `<store>` uses) produces an unregistered closure, and SSR dies
-  with `Unable to serialize`. `<store>` has this latent limitation today: it
-  works only because its getter is never spread onto an element.
+  produces an unregistered closure, and SSR dies with
+  `Unable to serialize`. `<store>` shipped that way until 2.0; both tags now
+  write the arrow directly.
 - `<script>` compiles to an effect keyed on every binding it READS
   (assignment alone creates no dependency). A `<script>` that reads a `<let>`
   it also writes re-subscribes on itself, so service creation and `props()`

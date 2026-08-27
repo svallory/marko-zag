@@ -105,6 +105,35 @@ This is why `<service>` returns a **getter**: a closure written in a
 template is the only serializable stand-in for a service, and calling it
 defers the real-vs-throwaway choice to call time.
 
+## A getter built inside an IIFE cannot be serialized
+
+Returning a getter is necessary but not sufficient — *how you write it*
+decides whether it survives the boundary. The compiler wraps a closure
+written **directly** as a `<const>` value in `_resume(...)`, registering it
+so it can be serialized. Wrap that same closure in an IIFE and it stays
+unregistered:
+
+```marko
+<const/value=(void rev, () => snapshot())/>          <!-- registered -->
+<const/value=((_rev: number) => () => snapshot())(rev)/>  <!-- NOT registered -->
+```
+
+Both behave identically until a consumer makes the browser reference the
+getter — which a **spread** does:
+
+```marko
+<div ...store().attrs>   <!-- unregistered getter: Unable to serialize -->
+<div>${store().count}</div>   <!-- body content: never triggers it -->
+```
+
+That asymmetry is why this hides so well: reading a snapshot in body content
+works forever, and the failure appears only when someone spreads its fields
+onto an element. marko-zag's own `<store>` shipped this way until 2.0.
+
+An IIFE is tempting because TypeScript rejects a bare identifier before a
+comma (`error TS2695`). Use `void dep,` instead — it keeps the dependency
+read and leaves the arrow in the value position.
+
 ## A `<script>` that reads a `<let>` it also writes re-subscribes on itself
 
 `<script>` compiles to an effect keyed on every binding it **reads**

@@ -25,7 +25,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
   getter. (`rev` survives only as an internal `<let>` counter inside
   `<service>`.)
 
-`<machine-props>`, `<portal>`, and `<store>` are unchanged.
+`<machine-props>` and `<portal>` are unchanged; `<store>` keeps its API and
+gains the serialization fix below.
 
 Why a getter rather than the service object: returning the service itself
 does **not** throw on the server. Marko serializes it with every function
@@ -38,6 +39,15 @@ The getter's *identity* is the change signal: it is a fresh closure on every
 machine update and on every change to a value read inside the caller's props
 closure, so a downstream `<const>` recomputes for both machine transitions
 and controlled-prop changes with no hand-written dependency list.
+
+### Fixed
+
+- `<store>`: spreading a store snapshot's fields onto an element
+  (`<div ...toasts().attrs>`) no longer fails with
+  `Unable to serialize`. The snapshot getter was built inside an IIFE, which
+  left it unregistered; it is now written directly as the `<const>` value so
+  the compiler wraps it in `_resume(...)`. Reading a snapshot in body
+  content was unaffected, which is why this went unnoticed.
 
 ### Migration
 

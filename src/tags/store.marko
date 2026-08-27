@@ -32,19 +32,19 @@ export interface Input<T = unknown> {
     unsubscribe?.();
   }
 />
-// The eager `rev` read (the IIFE argument) is the reactive dependency:
-// every store notification bumps rev, recomputing the const and giving
-// consumers a fresh getter identity.
+// The eager `rev` read is the reactive dependency: every store notification
+// bumps rev, recomputing the const and giving consumers a fresh getter
+// identity. `void rev` keeps that read while leaving the arrow in the value
+// position (a bare `rev,` there is a TS "left side of comma operator is
+// unused" error).
 //
-// NOTE: the IIFE keeps this closure UNREGISTERED, so it cannot be
-// serialized if a consumer ever references it from the browser — spreading
-// `toasts()` onto an element would fail with `Unable to serialize`. That is
-// fine for a store snapshot, which is read in body content, but it is why
-// <service> writes its arrow directly as the <const> value instead (the
-// compiler then wraps it in `_resume(...)`).
-<const/value=((_rev: number) => () =>
+// The arrow MUST be written directly as the <const> value: the compiler
+// wraps a directly-written closure in `_resume(...)`, registering it so it
+// can be serialized once the browser references it — which happens as soon
+// as a consumer spreads a snapshot's fields onto an element.
+<const/value=(void rev, () =>
   typeof document === "undefined"
     ? (input.serverSnapshot ?? input.snapshot)()
     : input.snapshot()
-)(rev)/>
+)/>
 <return=value/>
