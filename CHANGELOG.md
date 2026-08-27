@@ -6,7 +6,7 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-## [2.0.0] - 2026-08-27
+## [2.0.0-rc.1] - 2026-08-27
 
 ### Changed
 
@@ -186,8 +186,8 @@ service.rev                           service
 
 - `stripOwnProps` native-attrs helper.
 
-[Unreleased]: https://github.com/svallory/marko-zag/compare/v2.0.0...HEAD
-[2.0.0]: https://github.com/svallory/marko-zag/compare/v1.2.1...v2.0.0
+[Unreleased]: https://github.com/svallory/marko-zag/compare/v2.0.0-rc.1...HEAD
+[2.0.0-rc.1]: https://github.com/svallory/marko-zag/compare/v1.2.1...v2.0.0-rc.1
 [1.2.1]: https://github.com/svallory/marko-zag/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/svallory/marko-zag/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/svallory/marko-zag/compare/v1.1.0...v1.1.1
