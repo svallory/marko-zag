@@ -95,7 +95,7 @@ export type Input = MachineInput<"div", dialogMachine.Props> & {
   </if>
 </portal>
 
-<return=api>
+<return=api/>
 ```
 
 Using it:
