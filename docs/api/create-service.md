@@ -18,7 +18,7 @@ Creates a Zag v1 machine service for Marko 6 — the Marko analog of
 with Solid's reactive primitives replaced by plain values plus a `notify`
 callback.
 
-The [`<service>`](/api/tags/#service) tag wraps this function; call it
+The [`<zag-machine>`](/api/tags/#zag-machine) tag wraps this function; call it
 directly only for custom integrations (e.g. spawned child services).
 
 ## Parameters

@@ -14,7 +14,7 @@ Input type for a Marko component wrapping a Zag machine: the native tag's
 attributes intersected with the machine's full `Props` type.
 
 The only adjustment is `id`: Zag's `CommonProperties` requires it, but the
-[`<machine-props>`](/api/tags/#machine-props) tag generates a stable one
+[`<zag>`](/api/tags/#zag) tag generates a stable one
 automatically — so consumers may omit it (and may still override it).
 
 ## Type parameters

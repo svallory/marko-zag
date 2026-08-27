@@ -35,7 +35,7 @@ A never-started `MarkoService`, safe to pass to a machine module's
 
 ## Example
 
-This is exactly what the [`<service>`](/api/tags/#service) tag's getter does
+This is exactly what the [`<zag-machine>`](/api/tags/#zag-machine) tag's getter does
 internally — picking the real service when there is one, and a throwaway
 otherwise:
 

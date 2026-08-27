@@ -95,7 +95,7 @@ To replace a generated wrapper, write the callback on the tag — an override
 replaces it outright, with no implicit forwarding:
 
 ```marko
-<zag/api=() => dialog from=input role="dialog"
+<zag/api=() => tooltip from=input closeOnEscape=false
   onOpenChange(details) {
     input.onOpenChange?.(details);
     track(details.open);

@@ -62,8 +62,8 @@ export function adaptChangeCallback(
  * the result.
  *
  * Overrides win: an attribute written on the tag replaces whatever `from`
- * supplied, which is how a component pins `role="dialog"` or substitutes its
- * own callback.
+ * supplied, which is how a component pins a machine prop (`closeOnEscape`,
+ * `count`, `inline`) or substitutes its own callback.
  *
  * @param from - the component's input object
  * @param names - the machine module's exported `props` array

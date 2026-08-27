@@ -51,14 +51,22 @@ export interface Input<M extends ZagModule> extends ZagMachineInput<M> {}
 // cross the tag-input wall, so they must be plain data; anything with
 // methods (a ListCollection, a DateValue, a Color) has to be born inside
 // `props=`, which is written in the caller's template and never crosses.
-<const/machineProps=() => {
-  const { value: _mod, from, props, normalize: _normalize, ...overrides } = input as Record<string, any>;
-  if (!from && !props) {
+//
+// The requirement is checked HERE, eagerly, rather than inside the closure
+// below: a check deferred to the closure would only fire on the first render
+// that reads props, turning a wiring mistake into a render-time error far
+// from its cause.
+<const/validated=(() => {
+  if (!input.from && !input.props) {
     throw new Error(
       "<zag-machine> requires `from=` (an input object to pick machine props from) " +
         "or `props=` (a closure returning the machine props), or both.",
     );
   }
+  return true;
+})()/>
+<const/machineProps=() => {
+  const { value: _mod, from, props, normalize: _normalize, ...overrides } = input as Record<string, any>;
   if (!from) return props!();
   const picked = buildMachineProps(from, mod().props, overrides, generatedId);
   return props ? props(picked) : picked;

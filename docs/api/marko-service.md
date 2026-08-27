@@ -59,4 +59,4 @@ server/client boundary:
 - **Client** — store the real instance in a `<let/svc=null>` (the `null`
   serializes; the instance is created fresh in `onMount`).
 
-The [`<service>`](/api/tags/#service) tag implements this contract for you.
+The [`<zag-machine>`](/api/tags/#zag-machine) tag implements this contract for you.

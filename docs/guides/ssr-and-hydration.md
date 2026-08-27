@@ -34,7 +34,7 @@ simply garbage-collected after render. It never crosses the boundary.
 
 ### Client: `createService` — the real machine, born in `onMount`
 
-The `<service>` tag stores the real service in a `<let/instance=null>`. The
+`<zag-machine>` stores the real service in a `<let/instance=null>`. The
 `null` is what serializes; on mount the client constructs its own instance
 with `createService(...)` and calls `start()`, which runs entry
 actions/effects and schedules one recompute.
@@ -43,24 +43,36 @@ What the tag *returns* is a **getter** that picks whichever service is
 available at call time:
 
 ```marko
-// inside <service> (simplified)
+// inside <zag-machine> (simplified)
+<const/mod=input.value/>
 <let/rev=0/>
 <let/instance=null/>
 <lifecycle
   onMount() {
-    instance = createService(input.machine(), props, () => { rev += 1 });
+    instance = createService(mod().machine, machineProps, () => { rev += 1 });
     instance.start();
   }
   onDestroy() { instance?.stop(); }
 />
-<const/service=(void rev, props(), () => instance ?? ssrService(input.machine(), props))/>
+<const/service=(void rev, machineProps(), () =>
+  instance ?? ssrService(mod().machine, machineProps)
+)/>
 <return=service/>
+```
+
+`<zag>` is that tag plus one more line, so it inherits the whole contract:
+
+```marko
+// inside <zag> (simplified)
+<zag-machine/service ...input/>
+<const/api=() => mod().connect(service(), input.normalize ?? normalizeProps)/>
+<return=api/>
 ```
 
 So a consumer writes one line and never mentions the boundary:
 
 ```marko
-<const/api=() => dialogMachine.connect(service(), normalizeProps)/>
+<zag/api=() => dialogMachine from=input/>
 ```
 
 Returning a getter rather than the service object is what keeps this safe.
@@ -69,30 +81,42 @@ serializes it with every function silently stripped, the page renders, and
 the first client read dies with `TypeError: … is not a function`. See the
 [gotchas page](/guides/gotchas/).
 
-The two eager reads (`rev` and `props()`) are the getter's reactive
+The two eager reads (`rev` and `machineProps()`) are the getter's reactive
 dependencies. Marko's `<const>` propagates only a value that is `!==` the
 previous one, so each yields a *fresh closure* and every downstream `<const>`
 recomputes — on machine transitions and on controlled-prop changes alike.
+The `api` getter inside `<zag>` depends only on the service getter's
+identity, which is why it follows both.
 
 ## The serialization boundary, itemized
 
 | Value | Serializable? | How it crosses |
 | --- | --- | --- |
-| `<service>`'s getter | yes | it is a closure written in a template, which Marko registers and re-links on resume; the service instance itself is never referenced from the serialized value |
+| `<zag>`'s api getter / `<zag-machine>`'s service getter | yes | a closure written directly as a `<const>` value, which Marko registers and re-links on resume; the service instance itself is never referenced from the serialized value |
 | The running service | no | never crosses — it lives in a `<let>` that holds `null` on the server, and is rebuilt client-side in `onMount` |
-| The machine definition | no | never crosses — both sides import it from `@zag-js/*` and access it through the `machine=() => ...` getter |
+| The machine module | no | never crosses — both sides import it from `@zag-js/*` and access it through the `() => mod` value getter |
+| Collections, `DateValue`s, `Color`s | no | never cross — built inside the `props=` closure, which is written in your template |
 | Event handlers in connect output | no | stripped on the server by `normalizeProps` (server HTML doesn't need them); reappear on the first client recompute, which `service.start()` schedules |
-| Machine getters/APIs | no | reconnected client-side — `connect()` re-derives the API from the client's own service |
+| Machine getters/APIs | no | reconnected client-side — `connect()` re-derives the api from the client's own service |
 
-## Why `machine=` lives in your template
+## Why the module getter lives in your template
 
-`<service machine=() => dialogMachine.machine .../>` looks like ceremony —
-why not `machine=dialogMachine.machine`? Because tag input is serialized for
-resume, and the raw machine (an object with functions from npm code) is
-unserializable. A closure **written in the template of the consuming
-component** is different: Marko can re-establish it on resume because it
-knows which module and scope it came from. The same reasoning is why
-`<service>` returns a getter instead of a service.
+`<zag/api=() => dialogMachine from=input/>` looks like ceremony — why not
+`api=dialogMachine`? Because tag input is serialized for resume, and the raw
+module (an object with functions from npm code) is unserializable. A closure
+**written in the template of the consuming component** is different: Marko
+can re-establish it on resume because it knows which module and scope it came
+from. The same reasoning is why `<zag>` returns a getter instead of an api
+object, why `<zag-store>`'s `subscribe`/`snapshot` are closures, and why
+`props=` — not `from=` — is where values with methods are built.
+
+## `<zag-store>` on the server
+
+`<zag-store>` follows the same rule from the other direction: on the server
+its getter returns `serverSnapshot()` (falling back to `snapshot()`), the
+same contract as React's third `useSyncExternalStore` argument. It subscribes
+on mount and unsubscribes on destroy, so nothing external is touched during
+render.
 
 ## Effect timing
 
