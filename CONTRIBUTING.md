@@ -42,8 +42,8 @@ Marko-aware bundler).
 - `src/normalize-props.ts` — React-dialect → Marko attribute translation.
 - `src/prop-types.ts` — `PropTypes` map binding prop getters to Marko's
   native-tag input types.
-- `src/tags/` — the Marko tags (`<machine-props>`, `<service>`, `<portal>`,
-  `<store>`), auto-discovered via `marko.json`.
+- `src/tags/` — the Marko tags (`<zag>`, `<zag-machine>`, `<zag-portal>`,
+  `<zag-store>`), auto-discovered via `marko.json`. File names are tag names.
 - `tests/` — vitest; `tests/browser/` runs in real Chromium, `tests/ssr/`
   server-renders real `.marko` templates with no DOM, and
   `tests/type-assertions.ts` holds compile-time regression pins.

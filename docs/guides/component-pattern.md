@@ -217,7 +217,8 @@ build machine props that cannot cross the tag-input boundary.
   them.
 - **Without `from=`**, it is called with no argument and its return value is
   used verbatim.
-- Exactly one of `from=` / `props=` is required. Neither one throws at setup.
+- Exactly one of `from=` / `props=` is required. Omitting **both** throws at
+  setup, with a message naming both attributes.
 
 Collections, `@internationalized/date` values and `Color` instances are class
 instances whose methods are the whole reason they exist. Passed through

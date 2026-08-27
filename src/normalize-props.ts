@@ -107,9 +107,18 @@ const isServer = typeof document === "undefined";
  *   boolean-attribute rendering would emit an empty attribute instead.
  *
  * @example
+ * `<zag>` applies this normalizer by default:
+ *
  * ```marko
  * <zag/api=() => switchMachine from=input/>
- * <const/api=() => switchMachine.connect(service(), normalizeProps)/>
+ * <label ...api().getRootProps()>
+ * ```
+ *
+ * When the component owns the service itself, {@link connect} applies it:
+ *
+ * ```marko
+ * <zag-machine/service=() => switchMachine from=input/>
+ * <const/api=() => connect(switchMachine, service())/>
  * <label ...api().getRootProps()>
  * ```
  *

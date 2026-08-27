@@ -239,8 +239,9 @@ tear down and rebuild the service.
 or `props=` (a closure returning the machine props), or both.
 ```
 
-The throw happens when the props closure is first called, not at setup, so
-it surfaces on the first render rather than at compile time.
+The check is **eager**: `<zag-machine>` runs it in its own `<const>` at
+setup, not inside the props closure. A wiring mistake therefore throws where
+you wrote the tag, rather than on whichever later render first reads props.
 
 ## Effects fire two frames late — on purpose
 
