@@ -1,0 +1,27 @@
+// Fixture for the getter-service browser test: drives a real @zag-js/checkbox
+// machine through the PUBLIC tag API — <machine-props> + <service> + a plain
+// <const> calling connect(). This is the exact three-line pattern the README
+// documents, so it regression-tests the contract authors actually write.
+//
+// `apiIdentities` counts how many distinct api objects the <const> has
+// produced. Because the <const> recomputes only when `service` changes
+// identity, that counter IS the observable for "the getter got a fresh
+// closure" — which is criterion (a): a machine transition must yield a fresh
+// getter, and the derived <const> must recompute.
+import * as checkbox from "@zag-js/checkbox";
+import { normalizeProps } from "../../../src/normalize-props.ts";
+
+export interface Input {
+  id: string;
+  defaultChecked?: boolean;
+}
+
+<machine-props/machineProps from=input pick=checkbox.props/>
+<service/service machine=() => checkbox.machine props=machineProps/>
+<const/api=() => checkbox.connect(service(), normalizeProps)/>
+
+<label ...api().getRootProps() class="fx-root">
+  <input ...api().getHiddenInputProps() class="fx-input"/>
+  <span ...api().getControlProps() class="fx-control"/>
+  <span class="fx-state">${api().checked ? "on" : "off"}</span>
+</label>

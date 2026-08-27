@@ -1,0 +1,18 @@
+// Server-rendered fixture for tests/service.ssr.test.ts: the documented
+// two-line pattern, rendered with no DOM present at all.
+import * as checkbox from "@zag-js/checkbox";
+import { normalizeProps } from "../../src/normalize-props.ts";
+
+export interface Input {
+  id: string;
+  defaultChecked?: boolean;
+}
+
+<machine-props/machineProps from=input pick=checkbox.props/>
+<service/service machine=() => checkbox.machine props=machineProps/>
+<const/api=() => checkbox.connect(service(), normalizeProps)/>
+
+<label ...api().getRootProps()>
+  <input ...api().getHiddenInputProps()/>
+  <span ...api().getControlProps()/>
+</label>

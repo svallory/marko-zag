@@ -33,7 +33,7 @@
   ],
   "scripts": {
     "check": "marko-type-check -p ./tsconfig.json -d condensed",
-    "test": "vitest run",
+    "test": "vitest run && vitest run --config vitest.ssr.config.ts",
     "test:watch": "vitest",
     "test:browser": "vitest run --config vitest.browser.config.ts",
     "docs:dev": "docmd dev",
@@ -57,6 +57,7 @@
     "@vitest/browser": "3.2.7",
     "@zag-js/checkbox": "^1.43.0",
     "@zag-js/combobox": "^1.43.0",
+    "@zag-js/qr-code": "^1.43.0",
     "@zag-js/tooltip": "^1.43.0",
     "jsdom": "^25.0.0",
     "marko": "^6.3.34",
