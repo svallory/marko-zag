@@ -108,7 +108,7 @@ const isServer = typeof document === "undefined";
  *
  * @example
  * ```marko
- * <service/service machine=() => switchMachine.machine props=machineProps/>
+ * <zag/api=() => switchMachine from=input/>
  * <const/api=() => switchMachine.connect(service(), normalizeProps)/>
  * <label ...api().getRootProps()>
  * ```

@@ -1,0 +1,111 @@
+// Creates and owns a running Zag service — the Marko analog of Zag's
+// `useMachine(machine, props)`. Returns a service GETTER.
+//
+// Reach for this tag when the component needs the SERVICE itself (to thread
+// it into a child, or to connect a different module against it). When all
+// you want is the api, use <zag>, which is this tag plus the connect line.
+//
+//   <zag-machine/service=() => toast props=() => ({ ...input.options() })/>
+//   <const/api=() => connect(toast, service())/>
+//
+// The value shorthand is the MODULE getter (`() => switchMachine`), not the
+// machine: the tag reads `.machine` for the interpreter and `.props` for the
+// name list it picks out of `from=`. One getter carries both, so a component
+// never repeats the module name.
+//
+// `service()` returns the real running service on the client after mount,
+// and a never-started throwaway (`ssrService`) on the server and before
+// mount — Zag's `connect()` is a pure read, so that renders the correct
+// initial attributes with no DOM access.
+//
+// A GETTER, not the service object, is load-bearing. Returning the service
+// itself does NOT throw on the server: Marko serializes it with every
+// function silently stripped, the page renders, and the first client read
+// dies with `TypeError: … is not a function`. A closure written in this
+// template is the only serializable stand-in for "a service", and calling
+// it defers the real-vs-throwaway choice to call time.
+//
+// The getter's IDENTITY is the change signal. `_const` propagates only when
+// the new value is `!==` the old one, so every machine notify — and every
+// change to a value read inside the props closure — must yield a FRESH
+// closure. That is what makes a downstream
+// `<const/api=() => connect(mod, service())/>` recompute with no
+// hand-written dependency list.
+//
+// `mod=` MUST be a getter closure written in the caller's template
+// (`() => switchMachine`): tag input is serialized for resume, and a raw
+// module (functions from npm code) throws `Unable to serialize "input"`.
+import { createService, ssrService, type MarkoService } from "../machine.ts";
+import { buildMachineProps } from "../machine-props.ts";
+import type { ZagModule, ZagMachineInput, ZagProps } from "../zag-module.ts";
+
+export interface Input<M extends ZagModule> extends ZagMachineInput<M> {}
+
+<id/generatedId/>
+<const/mod=input.value/>
+// Props building, absorbed from the deleted <machine-props> tag. Both paths
+// end in ONE closure, because the closure is what this tag tracks: every
+// reactive value it reads becomes a dependency of the service getter.
+//
+// The `from`/`props` split is the serialization boundary. `from=` values
+// cross the tag-input wall, so they must be plain data; anything with
+// methods (a ListCollection, a DateValue, a Color) has to be born inside
+// `props=`, which is written in the caller's template and never crosses.
+<const/machineProps=() => {
+  const { value: _mod, from, props, normalize: _normalize, ...overrides } = input as Record<string, any>;
+  if (!from && !props) {
+    throw new Error(
+      "<zag-machine> requires `from=` (an input object to pick machine props from) " +
+        "or `props=` (a closure returning the machine props), or both.",
+    );
+  }
+  if (!from) return props!();
+  const picked = buildMachineProps(from, mod().props, overrides, generatedId);
+  return props ? props(picked) : picked;
+}/>
+
+<let/rev=0/>
+<let/instance=null as MarkoService<any> | null/>
+<lifecycle
+  onMount() {
+    instance = createService(mod().machine, machineProps, () => { rev += 1 });
+    instance!.start();
+  }
+  onDestroy() {
+    instance?.stop();
+  }
+/>
+// Separate from the <lifecycle> above ON PURPOSE. A <script> compiles to an
+// effect keyed on every binding it READS, so a <script> that both reads and
+// writes one <let> re-subscribes on its own notifications. Creating the
+// service here — where `machineProps()` is read — would recreate it on every
+// prop change. Assignment alone creates no dependency; this block only reads
+// `machineProps()` and `instance`, and calls a method.
+<script>
+  // Tracks every reactive read inside the props closure — controlled props
+  // re-notify the machine without a hand-typed dep list.
+  machineProps();
+  instance?.propsChanged();
+</script>
+// The eager reads are the getter's reactive dependencies; the comma discards
+// them, but Babel counts the references all the same:
+//   - `rev` — bumped by the machine's notify callback (transitions and
+//     bindable context writes);
+//   - `machineProps()` — every tracked read inside the props closure, so a
+//     controlled prop that only feeds Zag `computed(...)` values still
+//     invalidates the getter.
+// Each produces a FRESH closure, which is the only thing `_const` propagates
+// on. Reads only, no writes — cannot loop.
+//
+// The arrow MUST be written directly as the <const> value. The compiler wraps
+// a directly-written closure in `_resume(...)`, registering it so it can be
+// serialized when the browser references it — which happens as soon as a
+// consumer spreads `api()` onto an element. Wrapping it in an IIFE yields an
+// unregistered runtime closure and the render dies with `Unable to
+// serialize`. `void rev` keeps the dependency read while leaving the arrow in
+// the value position (a bare `rev,` there is a TS "left side of comma
+// operator is unused" error).
+<const/service=(void rev, machineProps(), () =>
+  (instance ?? ssrService(mod().machine, machineProps)) as MarkoService<ZagProps<M>>
+)/>
+<return=service/>
