@@ -9,9 +9,9 @@
  * native-attrs helper, and the {@link MachineInput} / {@link PropTypes}
  * helper types.
  *
- * The Marko surface — the `<machine-props>`, `<service>`, `<connect>`,
- * `<portal>`, and `<store>` tags — is auto-discovered through this
- * package's `marko.json` taglib; no import is needed inside `.marko` files.
+ * The Marko surface — the `<machine-props>`, `<service>`, `<portal>`, and
+ * `<store>` tags — is auto-discovered through this package's `marko.json`
+ * taglib; no import is needed inside `.marko` files.
  *
  * @packageDocumentation
  */
