@@ -144,6 +144,52 @@ import { positionerStyle } from "marko-zag";
 </div>
 ```
 
+## `TS2589` when you annotate a native-attribute passthrough
+
+Building a passthrough of leftover native attributes and spreading it onto
+an element next to a Zag prop getter is a common pattern:
+
+```marko
+<const/nativeAttrs=(): PropTypes["element"] =>
+  stripOwnProps(checkboxMachine.splitProps(input)[1] as typeof input, "class")
+/>
+
+<label ...api().getRootProps()>
+  <input ...nativeAttrs() ...api().getHiddenInputProps()>
+</label>
+```
+
+The annotation on that `<const>` matters. Writing it with a **narrowed**
+element parameter — `Marko.HTMLAttributes<HTMLInputElement>` — makes the
+type checker fail with:
+
+```
+error TS2589: Type instantiation is excessively deep and possibly infinite.
+```
+
+Use `PropTypes["element"]` (exported from `marko-zag`) instead, or the
+equivalent `Marko.HTMLAttributes<Element>`.
+
+This is a **Marko type-level limit, not a marko-zag one**: checking a
+narrowed `HTMLAttributes<T>` against a native tag's own input instantiates
+marko's shared `CommonAttributes<T>` event-handler surface at a second,
+different `T`, and the combined check exceeds TypeScript's instantiation
+depth. It reproduces in a project with only `marko` installed — no
+marko-zag, no Zag — from a *single* spread:
+
+```marko
+<const/nativeAttrs=(): Marko.HTMLAttributes<HTMLInputElement> => ({})/>
+<input ...nativeAttrs()>
+```
+
+Verified on marko 6.3.36 and 6.3.46. marko-zag's own api type is not a
+factor: `...api().getHiddenInputProps()` spreads twice over cleanly on its
+own. `PropTypes["element"]` is deliberately `HTMLAttributes<Element>` — its
+type parameter appears only contravariantly, so it stays assignable to every
+tag while keeping the check shallow.
+
+Do not reach for `@ts-expect-error` here; the annotation change is the fix.
+
 ## `event.currentTarget` is shadowed, not native
 
 Marko's delegated events leave `event.currentTarget` pointing at the
