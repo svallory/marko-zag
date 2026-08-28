@@ -8,7 +8,10 @@ framework-agnostic state machines inside Marko components. Ported from
 ## Commands (bun only — never npm)
 
 - `bun run check` — marko-type-check over TS + `.marko` (the gate; also
-  compiles `tests/type-assertions.ts`)
+  compiles `tests/type-assertions.ts` and `tests/type-fixtures/**/*.marko`).
+  `tsconfig.json`'s `include` only covers `src/**`, so a `.marko` file added
+  anywhere under `tests/` is NOT type-checked until it is listed there —
+  confirm coverage by making a new fixture fail on purpose first.
 - `bun run test` — vitest twice: the jsdom/node suite, then the
   server-render suite (`vitest.ssr.config.ts`, `tests/ssr/**`), which
   compiles real `.marko` templates through `@marko/vite` with no DOM.
@@ -73,6 +76,14 @@ framework-agnostic state machines inside Marko components. Ported from
 - A tag's VALUE shorthand (`<zag/api=() => mod/>`) arrives as `input.value`,
   not as a named attribute. Spreading a tag's whole input onto a child tag
   is `<child-tag/var ...input/>`.
+- A NARROWED `Marko.HTMLAttributes<HTMLInputElement>` annotation on a value
+  spread onto a native tag blows TypeScript's instantiation depth
+  (`error TS2589`), even from a single spread and with no marko-zag in the
+  project (verified on marko 6.3.36 AND 6.3.46). Checking it against the
+  tag's own input instantiates `CommonAttributes<T>` at a second `T`.
+  `Marko.HTMLAttributes<Element>` — i.e. `PropTypes["element"]`, which is
+  exported — is the annotation that stays shallow. Pinned by
+  `tests/type-fixtures/*.marko`.
 - A generic `.marko` tag compiles to a `Template` whose type parameter sits
   on the render signature, not the class, so
   `Marko.Return<typeof Tag<Arg>>` does NOT typecheck. Pin such a return by
