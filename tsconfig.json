@@ -17,6 +17,7 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.marko",
-    "tests/type-assertions.ts"
+    "tests/type-assertions.ts",
+    "tests/type-fixtures/**/*.marko"
   ]
 }
