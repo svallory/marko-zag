@@ -1,0 +1,22 @@
+// Same two-spread pin as two-spread-zag.marko, but for the
+// <zag-machine> + connect() path, so components that own the service are
+// covered too. See that file for why `PropTypes["element"]` is the annotation
+// that keeps the check inside TypeScript's instantiation depth.
+//
+// There must be no @ts-expect-error / @ts-ignore anywhere in this file.
+import * as checkboxMachine from "@zag-js/checkbox";
+import { connect, stripOwnProps } from "../../src/index.ts";
+import type { PropTypes } from "../../src/prop-types.ts";
+
+export type Input = checkboxMachine.Props & { class?: string };
+
+<zag-machine/service=() => checkboxMachine from=input/>
+<const/api=() => connect(checkboxMachine, service())/>
+
+<const/nativeAttrs=(): PropTypes["element"] =>
+  stripOwnProps(checkboxMachine.splitProps(input)[1] as typeof input, "class")
+/>
+
+<label ...api().getRootProps()>
+  <input ...nativeAttrs() ...api().getHiddenInputProps()>
+</label>

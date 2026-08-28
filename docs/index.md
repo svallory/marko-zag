@@ -18,10 +18,14 @@ registry is built on.
 
 ## What you get
 
-- **Four Marko tags** — `<machine-props>`, `<service>`, `<connect>`, and
-  `<portal>` — auto-discovered via the package's `marko.json` taglib.
-- **`normalizeProps`** — maps Zag's React-style prop objects onto Marko DOM
-  attributes (including the focus-preserving `tabIndex` → `tabindex` fix).
+- **Four Marko tags** — `<zag>`, `<zag-machine>`, `<zag-portal>`, and
+  `<zag-store>` — auto-discovered via the package's `marko.json` taglib.
+  `<zag>` owns the whole wiring: it runs the machine, connects the api, and
+  picks the machine's props out of your component's input.
+- **`normalizeProps` and `connect`** — `normalizeProps` maps Zag's
+  React-style prop objects onto Marko DOM attributes (including the
+  focus-preserving `tabIndex` → `tabindex` fix); `connect(mod, service)`
+  applies it for you.
 - **SSR-safety by construction** — the server renders correct initial
   attributes from a never-started machine; the client builds and starts the
   real machine on mount. Nothing unserializable ever crosses the boundary.
@@ -43,16 +47,7 @@ export type Input = MachineInput<"input", switchMachine.Props> & {
   checkedChange?: (checked: boolean) => void;
 };
 
-<machine-props/machineProps from=input pick=switchMachine.props
-  onCheckedChange(details: switchMachine.CheckedChangeDetails) {
-    input.onCheckedChange?.(details);
-    input.checkedChange?.(details.checked);
-  }/>
-<service/service machine=() => switchMachine.machine props=machineProps/>
-<connect/api=(service, normalizeProps) =>
-  switchMachine.connect(service, normalizeProps)
-  service=service
-/>
+<zag/api=() => switchMachine from=input/>
 
 <label ...api().getRootProps()>
   <input ...api().getHiddenInputProps()>
@@ -60,19 +55,30 @@ export type Input = MachineInput<"input", switchMachine.Props> & {
     <span ...api().getThumbProps()/>
   </span>
   <span ...api().getLabelProps()>
-    <${input.renderBody}/>
+    <${input.content}/>
   </span>
 </label>
 ```
 
-That's the whole integration: pick the machine's props from your component's
-input, run the machine in a `<service>`, `<connect>` the API, and spread the
-prop getters onto native tags.
+That's the whole integration. `from=input` picks the machine's own props out
+of your component's input, generates an `id`, and wires `checkedChange` to
+Zag's `onCheckedChange` so Marko's two-way bind shorthand
+(`<Switch checked:=myState/>`) works with no callback code of your own. Then
+you spread the prop getters onto native tags.
+
+Compare Zag's own two lines — the Marko version reads the same way, with
+`() =>` wrappers because tag input is serialized, and `api()` at use sites
+because the value is a getter:
+
+```ts
+const service = useMachine(accordion.machine, { id: useId() })
+const api = accordion.connect(service, normalizeProps)
+```
 
 ## Next steps
 
 - [Installation](/installation/) — bundler requirements and taglib discovery.
-- [The Three-Tag Pattern](/guides/three-tag-pattern/) — a full worked
+- [The Component Pattern](/guides/component-pattern/) — a full worked
   example wiring `@zag-js/dialog`.
 - [SSR & Hydration](/guides/ssr-and-hydration/) — how the server/client
   boundary works.

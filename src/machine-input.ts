@@ -3,7 +3,7 @@
  * attributes intersected with the machine's full `Props` type.
  *
  * The only adjustment is `id`: Zag's `CommonProperties` requires it, but the
- * `<machine-props>` tag generates a stable one automatically, so consumers
+ * `<zag>` tag generates a stable one automatically, so consumers
  * may omit it (and may still override it).
  *
  * @typeParam Tag - The native tag name whose attributes the component

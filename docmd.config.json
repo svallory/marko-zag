@@ -35,7 +35,7 @@
       "icon": "book-open",
       "collapsible": false,
       "children": [
-        { "title": "The Three-Tag Pattern", "path": "/guides/three-tag-pattern/" },
+        { "title": "The Component Pattern", "path": "/guides/component-pattern/" },
         { "title": "SSR & Hydration", "path": "/guides/ssr-and-hydration/" },
         { "title": "Landmines & Gotchas", "path": "/guides/gotchas/" }
       ]
@@ -49,6 +49,7 @@
         { "title": "createService", "path": "/api/create-service/" },
         { "title": "ssrService", "path": "/api/ssr-service/" },
         { "title": "MarkoService", "path": "/api/marko-service/" },
+        { "title": "connect", "path": "/api/connect/" },
         { "title": "normalizeProps", "path": "/api/normalize-props/" },
         { "title": "mergeProps", "path": "/api/merge-props/" },
         { "title": "positionerStyle", "path": "/api/positioner-style/" },

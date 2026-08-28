@@ -1,0 +1,36 @@
+// Server-rendered fixture for a CUSTOM `normalize=`.
+//
+// `normalize=` is a NormalizeProps OBJECT (what `createNormalizer` returns),
+// handed straight to the module's `connect` — not a closure, and not a plain
+// function. This fixture is the docs' "Wrapping it" recipe verbatim: delegate
+// to marko-zag's own normalizer, then layer something on top.
+//
+// The wrapper must be built with `createNormalizer`, NEVER by spreading:
+// `normalizeProps` is a Proxy with no own enumerable keys, so
+// `{ ...normalizeProps }` silently yields `{}` and every prop getter would
+// come back undefined.
+//
+// `data-normalized` is the visible trace. It appears in the SSR output only
+// if the custom normalizer actually reached `connect()`, which is the whole
+// point of the assertion.
+import { createNormalizer } from "@zag-js/types";
+import * as checkbox from "@zag-js/checkbox";
+import { normalizeProps } from "../../src/normalize-props.ts";
+import type { PropTypes } from "../../src/prop-types.ts";
+
+export interface Input {
+  id: string;
+  defaultChecked?: boolean;
+}
+
+static const myNormalize = createNormalizer<PropTypes>((props: Record<string, any>) => ({
+  ...(normalizeProps.element(props as any) as Record<string, any>),
+  "data-normalized": "custom",
+}));
+
+<zag/api=() => checkbox from=input normalize=myNormalize/>
+
+<label ...api().getRootProps()>
+  <input ...api().getHiddenInputProps()/>
+  <span ...api().getControlProps()/>
+</label>

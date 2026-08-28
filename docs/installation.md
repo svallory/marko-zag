@@ -52,8 +52,8 @@ marko-zag ships a `marko.json` taglib definition:
 ```
 
 The Marko compiler discovers taglibs of installed dependencies
-automatically, so `<machine-props>`, `<service>`, `<connect>`, and
-`<portal>` are available in every `.marko` file of your app with **no
+automatically, so `<zag>`, `<zag-machine>`, `<zag-portal>`, and
+`<zag-store>` are available in every `.marko` file of your app with **no
 imports and no configuration**. Editor tooling (the Marko VSCode extension /
 `@marko/type-check`) picks up the same definitions, including each tag's
 TypeScript `Input` interface.

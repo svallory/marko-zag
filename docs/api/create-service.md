@@ -18,7 +18,7 @@ Creates a Zag v1 machine service for Marko 6 — the Marko analog of
 with Solid's reactive primitives replaced by plain values plus a `notify`
 callback.
 
-The [`<service>`](/api/tags/#service) tag wraps this function; call it
+The [`<zag-machine>`](/api/tags/#zag-machine) tag wraps this function; call it
 directly only for custom integrations (e.g. spawned child services).
 
 ## Parameters
@@ -27,7 +27,7 @@ directly only for custom integrations (e.g. spawned child services).
 | --- | --- | --- |
 | `machine` | `any` | The Zag machine definition (e.g. `switchMachine.machine`). |
 | `userProps` | `() => Record<string, any>` | Closure returning the machine's props. Read lazily and memoized; call [`propsChanged()`](/api/marko-service/) after reactive props change to invalidate the cache. |
-| `notify` | `() => void` | Called (batched on a microtask) after every machine update; the host uses it to schedule a re-render — typically by bumping a `<let/rev>` signal. |
+| `notify` | `() => void` | Called (batched on a microtask) after every machine update; the host uses it to schedule a re-render — typically by bumping a counter `<let>` whose new value gives derived values fresh identity. |
 
 ## Returns
 

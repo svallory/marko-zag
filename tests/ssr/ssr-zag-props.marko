@@ -1,0 +1,33 @@
+// Server-rendered fixture for the `from=` + `props=` composition.
+//
+// The point is the SERIALIZATION BOUNDARY. `collection` here is a
+// ListCollection — a class instance whose methods are the whole reason it
+// exists. Passed through `from=` (or as a tag attribute) it would cross the
+// tag-input wall and die with `Unable to serialize "input"`. Built inside
+// `props=`, a closure written in THIS template, it never crosses at all.
+//
+// `props=` also receives the already-picked-and-adapted props, so the
+// component layers onto them rather than rebuilding them by hand.
+import * as select from "@zag-js/select";
+
+export interface Input {
+  id: string;
+  items: { value: string; label: string }[];
+  onValueChange?: (details: { value: string[] }) => void;
+  valueChange?: (value: string[]) => void;
+}
+
+<zag/api=() => select from=input props=(picked) => ({
+  ...picked,
+  collection: select.collection({
+    items: input.items,
+    itemToValue: (item) => item.value,
+    itemToString: (item) => item.label,
+  }),
+})/>
+
+<div ...api().getRootProps() class="fx-select">
+  <button ...api().getTriggerProps() class="fx-trigger">
+    ${api().valueAsString || "pick one"}
+  </button>
+</div>

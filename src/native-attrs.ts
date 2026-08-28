@@ -3,8 +3,8 @@
  * a machine's `splitProps`/`contextProps` returns, leaving only the native
  * element attributes to spread onto the rendered element.
  *
- * This is the fourth step of the three-tag contract (`<machine-props>` ->
- * `<service>` -> `<connect>` -> nativeAttrs). `machine.splitProps(input)[1]`
+ * This is the last step of the component pattern (`<zag>` ->
+ * nativeAttrs). `machine.splitProps(input)[1]`
  * is everything the machine did NOT claim, which still includes the
  * component's own additive props — `class` (usually applied separately
  * through a `cn()`-style helper, so leaving it here would emit the class

@@ -1,0 +1,37 @@
+// Pins the annotation that keeps a native-attribute passthrough inside
+// TypeScript's instantiation depth, next to a <zag> api spread.
+//
+// Reported from marko-ui's shadcn checkbox as an rc.2 regression at:
+//
+//   <input ...nativeAttrs() ...api().getHiddenInputProps()>
+//
+// It is NOT a marko-zag defect. The blowup comes from annotating the
+// passthrough with a NARROWED element parameter,
+// `Marko.HTMLAttributes<HTMLInputElement>`: checking that against a native
+// tag's own input instantiates marko's shared `CommonAttributes<T>`
+// event-handler surface at a second, different `T`, and the combined check
+// exceeds the depth limit. It reproduces from a SINGLE spread in a project
+// containing only marko — no marko-zag, no Zag — on both 6.3.36 and 6.3.46.
+// marko-zag's own api type spreads twice over cleanly on its own.
+//
+// `PropTypes["element"]` is `Marko.HTMLAttributes<Element>`: its type
+// parameter is contravariant-only, so it stays spreadable onto any tag while
+// keeping the check shallow. That is the supported annotation, and it is
+// exported from the package entry for consumers.
+//
+// There must be no @ts-expect-error / @ts-ignore anywhere in this file.
+import * as checkboxMachine from "@zag-js/checkbox";
+import { stripOwnProps } from "../../src/index.ts";
+import type { PropTypes } from "../../src/prop-types.ts";
+
+export type Input = checkboxMachine.Props & { class?: string };
+
+<zag/api=() => checkboxMachine from=input/>
+
+<const/nativeAttrs=(): PropTypes["element"] =>
+  stripOwnProps(checkboxMachine.splitProps(input)[1] as typeof input, "class")
+/>
+
+<label ...api().getRootProps()>
+  <input ...nativeAttrs() ...api().getHiddenInputProps()>
+</label>

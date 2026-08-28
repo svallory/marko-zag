@@ -1,0 +1,28 @@
+// Fixture for the controlled-prop / computed-only regression (criterion b).
+//
+// @zag-js/qr-code's `value` prop feeds ONLY `computed(...)`: changing it
+// produces no bindable write and no state transition, so the machine NEVER
+// notifies. Verified directly in tests/qr-code.integration.test.ts — a
+// `value` change yields a notify delta of 0.
+//
+// So nothing on the machine side can invalidate `api` here. The only thing
+// that can is the props path: a reactive read inside the caller's props
+// closure gives that closure a fresh identity, which <zag-machine> reads when
+// deriving the getter. This is the case that historically went stale
+// (marko-ui 79ff534f).
+import * as qrCode from "@zag-js/qr-code";
+
+export interface Input {
+  id: string;
+  value: string;
+}
+
+<let/value=input.value/>
+<zag/api=() => qrCode from={ id: input.id, value }/>
+
+<div ...api().getRootProps() class="fx-qr-root">
+  <svg ...api().getFrameProps()>
+    <path ...api().getPatternProps() class="fx-qr-pattern"/>
+  </svg>
+</div>
+<button class="fx-qr-set" onClick() { value = "https://a-much-longer-value.example/path" }>set</button>

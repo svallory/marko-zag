@@ -50,7 +50,7 @@ type Dict = Record<string, any>;
  * server/client boundary. On the server keep it out of reactive state and
  * build a throwaway via {@link ssrService} inside the render expression; on
  * the client store the real instance in a `<let/svc=null>` (the `null`
- * serializes; the instance is created fresh in `onMount`). The `<service>`
+ * serializes; the instance is created fresh in `onMount`). The `<zag-machine>`
  * tag implements this contract for you.
  */
 export interface MarkoService<T extends MachineSchema = MachineSchema> extends Service<T> {
@@ -115,7 +115,7 @@ export function ssrService<T extends MachineSchema>(
  * replaced by plain values plus a `notify` callback: whenever the machine
  * updates (a state transition or a bindable context write), `notify` is
  * invoked and the host component bumps a `<let/rev>` signal to trigger a
- * re-render. The `<service>` tag wraps this function; call it directly only
+ * re-render. The `<zag-machine>` tag wraps this function; call it directly only
  * when building custom integrations (e.g. spawned child services).
  *
  * @param machine - The Zag machine definition (e.g. `switchMachine.machine`).

@@ -86,9 +86,8 @@ const isServer = typeof document === "undefined";
 
 /**
  * Zag `normalizeProps` implementation for Marko 6 native tags — maps Zag's
- * React-flavored prop objects onto Marko DOM attributes. Pass it (or let the
- * `<connect>` tag pass it) as the second argument of a machine module's
- * `connect()`.
+ * React-flavored prop objects onto Marko DOM attributes. Pass it as the
+ * second argument of a machine module's `connect()`.
  *
  * What it translates:
  * - `className`→`class`, `htmlFor`→`for`, `onChange`→`onInput`,
@@ -108,8 +107,18 @@ const isServer = typeof document === "undefined";
  *   boolean-attribute rendering would emit an empty attribute instead.
  *
  * @example
+ * `<zag>` applies this normalizer by default:
+ *
  * ```marko
- * <connect/api=(svc, np) => switchMachine.connect(svc, np) service=switchService/>
+ * <zag/api=() => switchMachine from=input/>
+ * <label ...api().getRootProps()>
+ * ```
+ *
+ * When the component owns the service itself, {@link connect} applies it:
+ *
+ * ```marko
+ * <zag-machine/service=() => switchMachine from=input/>
+ * <const/api=() => connect(switchMachine, service())/>
  * <label ...api().getRootProps()>
  * ```
  *
