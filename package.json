@@ -1,6 +1,6 @@
 {
   "name": "marko-zag",
-  "version": "2.0.0-rc.2",
+  "version": "2.0.0-rc.3",
   "description": "Zag.js v1 bindings for Marko 6 \u2014 SSR-safe state machine adapter",
   "license": "MIT",
   "type": "module",
@@ -43,9 +43,9 @@
     "lint:package": "publint"
   },
   "dependencies": {
-    "@zag-js/core": "^1.43.0",
-    "@zag-js/types": "^1.43.0",
-    "@zag-js/utils": "^1.43.0"
+    "@zag-js/core": "1.43.3",
+    "@zag-js/types": "1.43.3",
+    "@zag-js/utils": "1.43.3"
   },
   "peerDependencies": {
     "marko": "^6.3.34"
@@ -55,11 +55,11 @@
     "@marko/type-check": "^2.0.0",
     "@marko/vite": "5",
     "@vitest/browser": "3.2.7",
-    "@zag-js/checkbox": "^1.43.0",
-    "@zag-js/combobox": "^1.43.0",
-    "@zag-js/qr-code": "^1.43.0",
-    "@zag-js/select": "^1.43.0",
-    "@zag-js/tooltip": "^1.43.0",
+    "@zag-js/checkbox": "1.43.3",
+    "@zag-js/combobox": "1.43.3",
+    "@zag-js/qr-code": "1.43.3",
+    "@zag-js/select": "1.43.3",
+    "@zag-js/tooltip": "1.43.3",
     "jsdom": "^25.0.0",
     "marko": "^6.3.34",
     "playwright": "^1.62.1",
