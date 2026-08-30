@@ -97,15 +97,16 @@ export const noForeignPart = apiGetter().getPatternProps();
 
 // --- there is no ZagProps alias, and why ------------------------------------
 
-// `ZagSchema<M>` recovers a module's schema through `Machine<infer T>`, but
-// the schema types its own members loosely: indexing it yields `any`. These
-// pins document that, so nobody reintroduces a `ZagProps<M>` alias believing
-// it constrains anything. (An earlier revision shipped one aliased to the
-// whole schema; `props?:` typed nothing and no assertion caught it.)
+// `ZagSchema<M>` recovers a module's schema through `Machine<infer T>`. As of
+// @zag-js/* 1.43.3, `schema.props` is a real (`RequiredBy<Props, ...>`) type,
+// not `any` — zag tightened this upstream. We still don't reintroduce a
+// `ZagProps<M>` alias: `checkbox.Props` (below) remains the precision path a
+// component's `Input` should extend, since it is what the docs point at and
+// isn't tied to the schema's internal defaulting shape.
 type IsAny<T> = 0 extends 1 & T ? "any" : "notany";
 
 declare const schemaProps: IsAny<ZagSchema<typeof checkbox>["props"]>;
-export const schemaPropsIsAny: "any" = schemaProps;
+export const schemaPropsIsReal: "notany" = schemaProps;
 
 // A module's OWN exported Props is a real type — this is the precision path,
 // via MachineInput on a component's Input, and it is what the docs point at.
