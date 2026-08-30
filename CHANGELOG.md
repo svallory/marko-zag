@@ -6,6 +6,24 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.0.0-rc.3] - 2026-08-30
+
+### Changed
+
+- **BREAKING** — every `@zag-js/*` dependency (`core`, `types`, `utils`, and
+  the machine devDependencies `checkbox`, `combobox`, `qr-code`, `select`,
+  `tooltip`) is pinned to exact `1.43.3`, up from the `^1.43.0` range
+  (installed `1.43.0`). No external users and no compatibility commitment on
+  this adapter, so the range is dropped for an exact pin rather than widened.
+
+### Fixed
+
+- `tests/type-assertions.ts`'s `ZagSchema<M>["props"]` pin: zag 1.43.3
+  tightened the machine schema so `props` is now a real
+  (`RequiredBy<Props, ...>`) type instead of `any`. The assertion is updated
+  to require `"notany"` instead of `"any"`; `checkbox.Props` remains the
+  precision path a component's `Input` should extend.
+
 ## [2.0.0-rc.2] - 2026-08-27
 
 ### Changed
@@ -349,7 +367,8 @@ service.rev                           service
 
 - `stripOwnProps` native-attrs helper.
 
-[Unreleased]: https://github.com/svallory/marko-zag/compare/v2.0.0-rc.2...HEAD
+[Unreleased]: https://github.com/svallory/marko-zag/compare/v2.0.0-rc.3...HEAD
+[2.0.0-rc.3]: https://github.com/svallory/marko-zag/compare/v2.0.0-rc.2...v2.0.0-rc.3
 [2.0.0-rc.2]: https://github.com/svallory/marko-zag/compare/v2.0.0-rc.1...v2.0.0-rc.2
 [2.0.0-rc.1]: https://github.com/svallory/marko-zag/compare/v1.2.1...v2.0.0-rc.1
 [1.2.1]: https://github.com/svallory/marko-zag/compare/v1.2.0...v1.2.1
