@@ -15,6 +15,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
   `tooltip`) is pinned to exact `1.43.3`, up from the `^1.43.0` range
   (installed `1.43.0`). No external users and no compatibility commitment on
   this adapter, so the range is dropped for an exact pin rather than widened.
+- **BREAKING** — root `typescript` moves from `^5.7.0` to `^7.0.2` (native
+  `tsgo`), matching the consumer. No code in this repo imports the
+  `typescript` compiler API (`import ts from "typescript"`), which TS 7 does
+  not export, so the move needed no source changes. `@marko/type-check`
+  bundles its own TypeScript (6.0.3) and is unaffected by this bump — the
+  `bun run check` gate's behavior is unchanged.
 
 ### Fixed
 
