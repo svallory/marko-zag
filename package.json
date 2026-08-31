@@ -52,8 +52,8 @@
   },
   "devDependencies": {
     "@docmd/core": "^0.9.2",
-    "@marko/type-check": "^2.0.0",
-    "@marko/vite": "5",
+    "@marko/type-check": "^3.2.0",
+    "@marko/vite": "^6.1.11",
     "@vitest/browser": "3.2.7",
     "@zag-js/checkbox": "1.43.3",
     "@zag-js/combobox": "1.43.3",
