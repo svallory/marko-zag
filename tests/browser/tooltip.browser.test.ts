@@ -3,7 +3,7 @@
 // pointer/focus timing, so this drives an actual DOM in a real browser via
 // vitest browser mode (see vitest.browser.config.ts).
 import { beforeEach, describe, expect, it } from "vitest";
-import { userEvent } from "@vitest/browser/context";
+import { userEvent } from "vitest/browser";
 import * as tooltip from "@zag-js/tooltip";
 import { createService, type MarkoService } from "../../src/machine.ts";
 import { normalizeProps } from "../../src/normalize-props.ts";

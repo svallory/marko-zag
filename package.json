@@ -1,7 +1,7 @@
 {
   "name": "marko-zag",
   "version": "2.0.0-rc.3",
-  "description": "Zag.js v1 bindings for Marko 6 \u2014 SSR-safe state machine adapter",
+  "description": "Zag.js v1 bindings for Marko 6 — SSR-safe state machine adapter",
   "license": "MIT",
   "type": "module",
   "author": {
@@ -54,7 +54,8 @@
     "@docmd/core": "^0.9.2",
     "@marko/type-check": "^3.2.0",
     "@marko/vite": "^6.1.11",
-    "@vitest/browser": "3.2.7",
+    "@vitest/browser": "^4.1.11",
+    "@vitest/browser-playwright": "^4.1.11",
     "@zag-js/checkbox": "1.43.3",
     "@zag-js/combobox": "1.43.3",
     "@zag-js/qr-code": "1.43.3",
@@ -66,7 +67,7 @@
     "playwright-core": "^1.62.1",
     "publint": "^0.3.24",
     "typescript": "^7.0.2",
-    "vitest": "^3.0.0"
+    "vitest": "^4.1.11"
   },
   "keywords": [
     "marko",
