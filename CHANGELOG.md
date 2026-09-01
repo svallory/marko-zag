@@ -6,6 +6,165 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-01
+
+### Changed
+
+- **BREAKING** — every tag is renamed under a `zag-` prefix:
+  `<service>` → `<zag-machine>`, `<store>` → `<zag-store>`,
+  `<portal>` → `<zag-portal>`.
+- **BREAKING** — `<zag-machine>` returns a service **getter**
+  (`() => MarkoService<T>`) instead of a serializable
+  `{ service, machine, props, rev }` handle. `service()` yields the real
+  running service on the client after mount, and a never-started throwaway
+  (`ssrService`) on the server and before mount, so `connect()` renders
+  correct initial attributes with no DOM access. `ServiceHandle` is deleted;
+  `rev` is gone from the public surface (it survives only as an internal
+  `<let>` counter inside `<zag-machine>`).
+- **BREAKING** — `<zag-machine>`'s value shorthand is the **module** getter
+  (`() => switchMachine`), not the machine getter. The tag reads `.machine`
+  for the interpreter and `.props` for the name list it picks out of
+  `from=`, so a component never repeats the module name.
+- **BREAKING** — the `<connect>` tag is **deleted**. Call the machine's own
+  `connect()` in a plain `<const>`, or use the new `connect(mod, service)`
+  helper — Marko's re-running render code is exactly where Zag expects
+  `connect` to be called, so the tag was pure ceremony.
+- **BREAKING** — the `<machine-props>` tag is **deleted**. Its job — pick the
+  machine-owned props out of a component's input, generate an `id`, merge the
+  tag's own attributes as overrides — is now the `from=` attribute on `<zag>`
+  and `<zag-machine>`.
+- **BREAKING** — every `@zag-js/*` dependency (`core`, `types`, `utils`, and
+  the machine devDependencies `checkbox`, `combobox`, `qr-code`, `select`,
+  `tooltip`) is pinned to exact `1.43.3`. No external users and no
+  compatibility commitment on this adapter, so the range is dropped for an
+  exact pin rather than widened.
+- **BREAKING** — root `typescript` moves to `^7.0.2` (native `tsgo`),
+  matching the consumer. No code in this repo imports the `typescript`
+  compiler API (`import ts from "typescript"`), which TS 7 does not export,
+  so the move needed no source changes. `@marko/type-check` bundles its own
+  TypeScript (6.0.3) and is unaffected by this bump.
+
+### Added
+
+- **`<zag>`** — the whole machine wiring in one tag. It is `<zag-machine>`
+  plus the connect line, returning the **api getter**:
+
+  ```marko
+  <zag/api=() => switchMachine from=input/>
+  <label ...api().getRootProps()>
+  ```
+
+  Identity contract: a fresh closure per machine notify and per tracked
+  props change, so every `api()` spread recomputes with no hand-written
+  dependency list.
+- **A default callback rule.** A picked machine prop matching
+  `on<X>Change` is wrapped automatically when the component supplies either
+  Zag's `onXChange` or Marko's bind-shorthand `xChange`. The wrapper forwards
+  the details object, then — only when `x in details` — calls
+  `xChange(details[x])`. A component declaring nothing but a
+  `checkedChange?: (checked: boolean) => void` input therefore supports
+  `<Switch checked:=myState/>` with no callback code of its own.
+
+  The `x in details` guard is deliberate: `onTriggerValueChange` matches the
+  name pattern but carries `details.value`, so its `triggerValueChange` half
+  correctly never fires. Callbacks that are not `on<X>Change` at all —
+  `onValueComplete`, `onPositionChangeEnd`/`onSizeChangeEnd`,
+  `onCollapse`/`onExpand` (called as `(panelId, size)`), `onTick`,
+  `onSelect`, `onValueCommit`, `onComplete`, `onResizeStart` — generate no
+  wrapper and are passed to the machine untouched. Write an override
+  attribute on the tag where you want more.
+- **`props=` composes with `from=`.** When both are given, `props=` receives
+  the picked-and-adapted props and its return value is what the machine gets.
+  That is the serialization-safe place to build a `ListCollection`, an
+  `@internationalized/date` value, or a `Color` — class instances that throw
+  `Unable to serialize "input"` if they cross the tag-input boundary, but
+  never cross when born inside a closure written in your own template.
+- **`connect(mod, service, normalize?)`** — the plain-function half of
+  `<zag>`, for components that own the service via `<zag-machine>`. Equal to
+  `mod.connect(service, normalize ?? normalizeProps)`, typed so the api
+  infers from the module. `normalizeProps` remains exported.
+- **`normalize=`** on `<zag>` swaps the prop normalizer.
+
+At least one of `from=` / `props=` is required; passing neither throws at
+setup with a message naming both.
+
+### Fixed
+
+- `<store>`: spreading a store snapshot's fields onto an element
+  (`<div ...toasts().attrs>`) no longer fails with `Unable to serialize`.
+  The snapshot getter was built inside an IIFE, which left it unregistered;
+  it is now written directly as the `<const>` value so the compiler wraps it
+  in `_resume(...)`.
+- `tests/type-assertions.ts`'s `ZagSchema<M>["props"]` pin: zag 1.43.3
+  tightened the machine schema so `props` is now a real
+  (`RequiredBy<Props, ...>`) type instead of `any`.
+
+### Migration
+
+The three-tag 1.x block collapses to one line, and now reads the same as
+Zag's own two lines:
+
+```marko
+<!-- before (1.x) -->
+<machine-props/machineProps from=input pick=accordion.props/>
+<service/service machine=() => accordion.machine props=machineProps/>
+<connect/api=(service, normalizeProps) =>
+  accordion.connect(service, normalizeProps)
+  service=service
+/>
+
+<!-- after (2.0.0) -->
+<zag/api=() => accordion from=input/>
+```
+
+The callback block disappears: forwarding `onCheckedChange` and unwrapping
+for `checkedChange` is now the default. Keep an explicit callback only where
+you do something extra, or where the details key does not match the name.
+
+`api` is a **getter** — call it at every use site (`api().getRootProps()`).
+The old handle's fields have no replacement fields — use the getter itself:
+
+```marko
+<!-- before (1.x) -->             <!-- after (2.0.0) -->
+service.service                   service()
+service.machine()                 <!-- import the machine module directly -->
+service.props                     <!-- pass your own props= closure -->
+service.rev                       service
+```
+
+- **`service.service` → `service()`.** The getter returns the running
+  service on the client, so `const ownService = service.service` becomes
+  `const ownService = service()`. In `onMount` this is equivalent: every
+  ancestor's machine has already mounted.
+- **`service.rev` as a `<script>` dependency → `service`.** A bare
+  `service;` is a valid dependency read, and the getter's identity now
+  changes on every update:
+
+  ```marko
+  <script>
+    service;          // was: service.rev;
+    uiValue = api();
+  </script>
+  ```
+
+- **Cross-service threading (`groupRevision=service.rev`) → thread the
+  getter.** Pass `service` itself as the prop; its identity changes on every
+  notify, so the child re-derives.
+- **`connectFresh` helpers** that hand-rolled `<connect>`'s body against the
+  raw handle are now just `<zag>`, or `connect(mod, service())`.
+
+`normalizeProps` is no longer passed for you, but `<zag>` and `connect()`
+both apply it by default, so most components stop importing it entirely.
+
+`<store>` → `<zag-store>` and `<portal>` → `<zag-portal>` are pure renames.
+
+---
+
+The sections below are the original `2.0.0-rc.1`–`2.0.0-rc.3` pre-release
+entries, kept for historical record. No stable release ever shipped them;
+the consolidated `[2.0.0]` entry above is the complete, accurate change
+against `1.x`.
+
 ## [2.0.0-rc.3] - 2026-08-30
 
 ### Changed
@@ -373,7 +532,8 @@ service.rev                           service
 
 - `stripOwnProps` native-attrs helper.
 
-[Unreleased]: https://github.com/svallory/marko-zag/compare/v2.0.0-rc.3...HEAD
+[Unreleased]: https://github.com/svallory/marko-zag/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/svallory/marko-zag/compare/v1.2.1...v2.0.0
 [2.0.0-rc.3]: https://github.com/svallory/marko-zag/compare/v2.0.0-rc.2...v2.0.0-rc.3
 [2.0.0-rc.2]: https://github.com/svallory/marko-zag/compare/v2.0.0-rc.1...v2.0.0-rc.2
 [2.0.0-rc.1]: https://github.com/svallory/marko-zag/compare/v1.2.1...v2.0.0-rc.1
