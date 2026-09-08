@@ -6,6 +6,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Root `typescript` devDependency moves back from `^7.0.2` to `^6.0.3` —
+  marko's tooling (`@marko/type-check`, `@marko/vite`) has issues with
+  TypeScript 7 (native `tsgo`). Added an optional `typescript` peerDependency
+  (`^5.0.0 || ^6.0.0`) so a TS 7 install surfaces an npm warning; see README
+  for the compatibility note.
+
 ## [2.0.0] - 2026-09-01
 
 ### Changed
