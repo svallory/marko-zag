@@ -22,6 +22,10 @@ Requires Marko `^6.3.34` and a **Marko-aware bundler** (marko-run or
 tags cannot be pre-compiled by a library, and the TypeScript exports are
 consumed directly.
 
+**TypeScript**: `^5.0.0` or `^6.0.0` supported. TypeScript **7** (`tsgo`,
+the native compiler) is **NOT** supported — Marko's tooling
+(`@marko/type-check`, `@marko/vite`) does not yet work with it.
+
 ## The pattern
 
 The four tags (`<zag>`, `<zag-machine>`, `<zag-portal>`, `<zag-store>`) are
