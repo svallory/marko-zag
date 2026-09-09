@@ -1,6 +1,6 @@
 {
   "name": "marko-zag",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Zag.js v1 bindings for Marko 6 — SSR-safe state machine adapter",
   "license": "MIT",
   "type": "module",
