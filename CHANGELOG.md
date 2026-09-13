@@ -6,6 +6,16 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `MachineInput<Tag, Props, Own>` gains an optional third type parameter,
+  `Own`. Keys present in `Own` are omitted from the native/`Props` side
+  before intersecting, so a component member that shares a name with a
+  native attribute (e.g. a `<@title>` attr tag on `div`, colliding with the
+  native `title: AttrString`) no longer collapses into an unsatisfiable
+  intersection. Two-param usage is unchanged (`Own` defaults to `{}`, a
+  no-op).
+
 ## [2.0.1] - 2026-09-09
 
 ### Changed

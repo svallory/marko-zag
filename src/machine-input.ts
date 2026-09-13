@@ -10,6 +10,12 @@
  * forwards (e.g. `"input"`, `"div"`).
  * @typeParam Props - The machine module's exported `Props` type
  * (e.g. `switchMachine.Props`).
+ * @typeParam Own - Extra members the component itself declares on its
+ * `Input` (e.g. an `<@title>` attr tag). Keys present in `Own` are omitted
+ * from the native/`Props` side before intersecting, so a declared member
+ * that shares a name with a native attribute (like `title`) is not forced
+ * into an unsatisfiable intersection with that attribute's native type.
+ * Defaults to `{}`, which is a no-op.
  *
  * @example
  * ```ts
@@ -22,6 +28,19 @@
  * };
  * ```
  *
+ * A component that declares a member colliding with a native attribute
+ * (e.g. `title` on `div`) passes that member as `Own` so it is not
+ * intersected with the native attribute's type:
+ * ```ts
+ * export type Input = MachineInput<
+ *   "div",
+ *   dialogMachine.Props,
+ *   { title?: Marko.AttrTag<{ content: Marko.Body }> }
+ * > & {
+ *   title?: Marko.AttrTag<{ content: Marko.Body }>;
+ * };
+ * ```
+ *
  * @remarks
  * Controlled-prop semantics follow Zag v1: passing a controlled prop (e.g.
  * `open=`) **without** wiring its change handler pins the machine to that
@@ -30,5 +49,8 @@
  * (`defaultOpen`, `defaultValue`, …) for the uncontrolled, initial-value
  * path.
  */
-export type MachineInput<Tag, Props> = Marko.Input<Tag> &
-  Omit<Props, "id"> & { id?: string };
+export type MachineInput<Tag, Props, Own = {}> = Omit<
+  Marko.Input<Tag> & Omit<Props, "id"> & { id?: string },
+  keyof Own
+> &
+  Own;
