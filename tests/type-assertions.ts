@@ -14,6 +14,7 @@
 import type * as checkbox from "@zag-js/checkbox";
 import type { MachineSchema } from "@zag-js/core";
 import type { MarkoService } from "../src/machine.ts";
+import type { MachineInput } from "../src/machine-input.ts";
 import type { PropTypes } from "../src/prop-types.ts";
 import type { ZagApi, ZagModule, ZagSchema } from "../src/zag-module.ts";
 import type Service from "../src/tags/zag-machine.marko";
@@ -117,6 +118,62 @@ export const moduleOwnPropsIsReal: "notany" = realProps;
 // needs it for.
 declare const svcOverSchema: MarkoService<ZagSchema<typeof checkbox>>;
 export const serviceTakesSchema: MarkoService<any> = svcOverSchema;
+
+// --- MachineInput's third type param (Own) ----------------------------------
+
+// A component whose Input declares an attr-tag member colliding with a
+// native attribute (e.g. `title` on `div`) passes it as `Own` so it resolves
+// to the declared type, not an unsatisfiable intersection with the native
+// attribute's type.
+type TitleAttrTag = { content: Marko.Body };
+type CollidingInput = MachineInput<
+  "div",
+  checkbox.Props,
+  { title?: Marko.AttrTag<TitleAttrTag> }
+>;
+declare const collidingTitle: CollidingInput["title"];
+export const collidingTitleIsAttrTag: Marko.AttrTag<TitleAttrTag> | undefined =
+  collidingTitle;
+// @ts-expect-error native `title` (AttrString) is no longer assignable once Own declares it
+export const collidingTitleRejectsNativeString: CollidingInput["title"] = "x";
+
+// Mutual-extends equality: `title` must be EXACTLY `Own`'s declared type, not
+// merely assignable to it. A naive plain intersection (no `Omit` of the
+// native side) would type `title` as `AttrString & AttrTag<TitleAttrTag>`,
+// which is still assignable to `AttrTag<TitleAttrTag> | undefined` (the
+// check above), but is NOT assignable *from* it, since the native
+// `AttrString` conjunct requires satisfying `string | false | null` too.
+// This pair only both pass when the native side has actually been omitted.
+type Exact<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+type CollidingTitleIsExactlyOwn = Exact<
+  CollidingInput["title"],
+  Marko.AttrTag<TitleAttrTag> | undefined
+>;
+export const collidingTitleIsExactlyOwnType: CollidingTitleIsExactlyOwn = true;
+
+// A plain, non-colliding member named `title` in `Own` is likewise the
+// declared type verbatim.
+type PlainOwnInput = MachineInput<"div", checkbox.Props, { title?: number }>;
+declare const plainOwnTitle: PlainOwnInput["title"];
+export const plainOwnTitleIsNumber: number | undefined = plainOwnTitle;
+// @ts-expect-error Own's declared type wins over the native string attribute
+export const plainOwnTitleRejectsString: PlainOwnInput["title"] = "x";
+
+// Without a third argument (or with Own left as `{}`), an undeclared `title`
+// stays the native attribute's own type.
+type NoOwnInput = MachineInput<"div", checkbox.Props>;
+declare const nativeTitle: NoOwnInput["title"];
+export const nativeTitleIsNativeAttrString: PropTypes["div"]["title"] =
+  nativeTitle;
+
+// Two-param usage is unchanged: everything from Tag + Props (minus `id`) is
+// still present, and `id` is still optional `string`.
+type TwoParamInput = MachineInput<"input", checkbox.Props>;
+declare const twoParamId: TwoParamInput["id"];
+export const twoParamIdIsOptionalString: string | undefined = twoParamId;
+declare const twoParamChecked: TwoParamInput["checked"];
+export const twoParamCheckedIsFromProps: checkbox.Props["checked"] =
+  twoParamChecked;
 
 // --- old tag names do not resolve ------------------------------------------
 
