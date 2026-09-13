@@ -21,6 +21,10 @@ The only adjustment on the native/`Props` side is `id`: Zag's
 generates a stable one automatically — so consumers may omit it (and may
 still override it).
 
+> `Own` always wins: if it declares its own `id` member (e.g. `Own = {id:
+> number}`), that member replaces the `id?: string` guarantee above —
+> the stable auto-generated `id` is no longer part of the type.
+
 ## Type parameters
 
 | Parameter | Description |

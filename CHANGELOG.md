@@ -14,7 +14,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
   native attribute (e.g. a `<@title>` attr tag on `div`, colliding with the
   native `title: AttrString`) no longer collapses into an unsatisfiable
   intersection. Two-param usage is unchanged (`Own` defaults to `{}`, a
-  no-op).
+  no-op). Note: `Own` always wins, so declaring an `id` member in `Own`
+  overrides the auto-generated stable `id?: string`.
 
 ## [2.0.1] - 2026-09-09
 
