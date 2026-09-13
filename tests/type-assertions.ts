@@ -137,6 +137,20 @@ export const collidingTitleIsAttrTag: Marko.AttrTag<TitleAttrTag> | undefined =
 // @ts-expect-error native `title` (AttrString) is no longer assignable once Own declares it
 export const collidingTitleRejectsNativeString: CollidingInput["title"] = "x";
 
+// Mutual-extends equality: `title` must be EXACTLY `Own`'s declared type, not
+// merely assignable to it. A naive plain intersection (no `Omit` of the
+// native side) would type `title` as `AttrString & AttrTag<TitleAttrTag>`,
+// which is still assignable to `AttrTag<TitleAttrTag> | undefined` (the
+// check above), but is NOT assignable *from* it, since the native
+// `AttrString` conjunct requires satisfying `string | false | null` too.
+// This pair only both pass when the native side has actually been omitted.
+type Exact<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+type CollidingTitleIsExactlyOwn = Exact<
+  CollidingInput["title"],
+  Marko.AttrTag<TitleAttrTag> | undefined
+>;
+export const collidingTitleIsExactlyOwnType: CollidingTitleIsExactlyOwn = true;
+
 // A plain, non-colliding member named `title` in `Own` is likewise the
 // declared type verbatim.
 type PlainOwnInput = MachineInput<"div", checkbox.Props, { title?: number }>;
