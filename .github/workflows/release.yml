@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Require dispatch from main
+        run: |
+          [ "$GITHUB_REF" = "refs/heads/main" ] || { echo "::error::Release must be dispatched from main"; exit 1; }
+
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Ensure npm CLI supports OIDC trusted publishing (>= 11.5.1)
+        run: npm install -g npm@^11.5.1
+
+      - run: bun install --frozen-lockfile
+
+      - name: Type check (TS + .marko)
+        run: bun run check
+
+      - name: Package lint
+        run: bun run lint:package
+
+      - name: Unit & integration tests (jsdom/node + SSR)
+        run: bun run test
+
+      - name: Install Chromium
+        run: bunx playwright install chromium --with-deps
+
+      - name: Browser tests (real Chromium)
+        run: bun run test:browser
+
+      - name: Check version is not already published
+        run: |
+          PKG_VERSION="$(bun -e 'console.log(require("./package.json").version)')"
+          PKG_NAME="$(bun -e 'console.log(require("./package.json").name)')"
+          if npm view "$PKG_NAME@$PKG_VERSION" version >/dev/null 2>&1; then
+            echo "::error::$PKG_NAME@$PKG_VERSION is already published to npm — nothing to release."
+            exit 1
+          fi
+          echo "$PKG_NAME@$PKG_VERSION is not yet published — proceeding."
+
+      - name: Publish to npm (OIDC trusted publishing, provenance automatic)
+        run: npm publish --access public

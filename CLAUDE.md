@@ -20,7 +20,10 @@ framework-agnostic state machines inside Marko components. Ported from
 - `bun run test:browser` — vitest browser mode, real Chromium
   (`bunx playwright install chromium` once)
 - `bun run lint:package` — publint
-- `bun run release` — maintainer-only manual npm publish
+- `.github/workflows/release.yml` — primary release path: manual
+  `workflow_dispatch`, npm OIDC trusted publishing (no token/secret), runs
+  check/test/test:browser gates then `npm publish --access public`
+- `bun run release` — local fallback manual npm publish
   (1Password-backed; NEVER run without the user's explicit approval)
 
 ## Architecture

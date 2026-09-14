@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Publishes marko-zag to npm.
 #
+# Primary release path is now CI: .github/workflows/release.yml
+# (workflow_dispatch, npm OIDC trusted publishing, no token needed).
+# This script is the local fallback for when CI publishing isn't available.
+#
 # Auth, tried in order:
 #   1. NPM_TOKEN already in the environment (granular automation token —
 #      no OTP needed).
