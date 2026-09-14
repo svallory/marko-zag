@@ -14,6 +14,10 @@ jobs:
       id-token: write
       contents: read
     steps:
+      - name: Require dispatch from main
+        run: |
+          [ "$GITHUB_REF" = "refs/heads/main" ] || { echo "::error::Release must be dispatched from main"; exit 1; }
+
       - uses: actions/checkout@v4
 
       - uses: oven-sh/setup-bun@v2
