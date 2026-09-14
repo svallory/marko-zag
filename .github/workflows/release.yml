@@ -23,12 +23,15 @@ jobs:
           node-version: 24
 
       - name: Ensure npm CLI supports OIDC trusted publishing (>= 11.5.1)
-        run: npm install -g npm@latest
+        run: npm install -g npm@^11.5.1
 
       - run: bun install --frozen-lockfile
 
       - name: Type check (TS + .marko)
         run: bun run check
+
+      - name: Package lint
+        run: bun run lint:package
 
       - name: Unit & integration tests (jsdom/node + SSR)
         run: bun run test
