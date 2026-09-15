@@ -1,21 +1,30 @@
 /**
  * Input type for a Marko component wrapping a Zag machine: the native tag's
- * attributes intersected with the machine's full `Props` type.
+ * attributes, with `Props` members shadowing any native attribute of the
+ * same name.
  *
- * The only adjustment is `id`: Zag's `CommonProperties` requires it, but the
- * `<zag>` tag generates a stable one automatically, so consumers
+ * `Props` always wins on a name collision (e.g. a Zag `dir` prop over the
+ * native `dir` attribute, `@zag-js/checkbox`'s `checked` over the native
+ * `checked` attribute, or a component's own attr-tag member over a
+ * same-named native attribute) — there is no case where intersecting a
+ * declared member with a native attribute is wanted, since it only produces
+ * redundant, lossy, or unsatisfiable types: an attr-tag `title` vs. the
+ * native `string | false | null` is unsatisfiable, while
+ * `checked: boolean | "indeterminate"` intersected with the native
+ * `checked: boolean` silently collapses to `boolean`, dropping
+ * `"indeterminate"` (lossy).
+ *
+ * The only other adjustment is `id`: Zag's `CommonProperties` requires it,
+ * but the `<zag>` tag generates a stable one automatically, so consumers
  * may omit it (and may still override it).
  *
  * @typeParam Tag - The native tag name whose attributes the component
  * forwards (e.g. `"input"`, `"div"`).
  * @typeParam Props - The machine module's exported `Props` type
- * (e.g. `switchMachine.Props`).
- * @typeParam Own - Extra members the component itself declares on its
- * `Input` (e.g. an `<@title>` attr tag). Keys present in `Own` are omitted
- * from the native/`Props` side before intersecting, so a declared member
- * that shares a name with a native attribute (like `title`) is not forced
- * into an unsatisfiable intersection with that attribute's native type.
- * Defaults to `{}`, which is a no-op.
+ * (e.g. `switchMachine.Props`), plus any component-declared extras folded in
+ * via intersection (e.g. an `<@title>` attr tag): `MachineInput<Tag, Props &
+ * Extras>`. Every member of this combined type shadows the same-named native
+ * attribute, if any.
  *
  * @example
  * ```ts
@@ -28,17 +37,27 @@
  * };
  * ```
  *
+ * Shadowing widens the component's *public* input, which is the point — but
+ * a widened prop is no longer assignable to the native attribute it shadows,
+ * so it must not be spread straight onto the rendered element. `checked` is
+ * the worked example: `Input["checked"]` is correctly
+ * `boolean | "indeterminate"`, while the native `<input>`'s `checked` is
+ * `AttrBoolean`. Such props are machine-owned state — let the machine's own
+ * `get*Props()` supply the element's value (for checkbox,
+ * `api().getHiddenInputProps()` already emits `checked`) and drop the
+ * incoming prop from whatever leftover object gets spread. The same applies
+ * to any Zag prop whose type is wider than, or a different shape from, the
+ * native attribute of that name (e.g. `@zag-js/slider`'s
+ * `"aria-label"?: string[]`, one label per thumb, vs. the native
+ * `aria-label?: AttrString`).
+ *
  * A component that declares a member colliding with a native attribute
- * (e.g. `title` on `div`) passes that member as `Own` so it is not
- * intersected with the native attribute's type:
+ * (e.g. `title` on `div`) folds it into `Props` via intersection, so it
+ * shadows the native attribute's type instead of intersecting with it:
  * ```ts
- * export type Input = MachineInput<
- *   "div",
- *   dialogMachine.Props,
- *   { title?: Marko.AttrTag<{ content: Marko.Body }> }
- * > & {
- *   title?: Marko.AttrTag<{ content: Marko.Body }>;
- * };
+ * type Extras = { title?: Marko.AttrTag<{ content: Marko.Body }> };
+ * export type Input = MachineInput<"div", dialogMachine.Props & Extras> &
+ *   Extras;
  * ```
  *
  * @remarks
@@ -49,8 +68,8 @@
  * (`defaultOpen`, `defaultValue`, …) for the uncontrolled, initial-value
  * path.
  */
-export type MachineInput<Tag, Props, Own = {}> = Omit<
-  Marko.Input<Tag> & Omit<Props, "id"> & { id?: string },
-  keyof Own
+export type MachineInput<Tag, Props> = Omit<
+  Marko.Input<Tag>,
+  Exclude<keyof Props, "id">
 > &
-  Own;
+  Omit<Props, "id"> & { id?: string };

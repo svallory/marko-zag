@@ -6,6 +6,44 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-09-15
+
+### Changed
+
+- **BREAKING** — the `Own` third type parameter of `MachineInput<Tag, Props,
+  Own>` (added in 2.1.0) is removed. `MachineInput` is two-parameter again:
+  `MachineInput<Tag, Props>`. Migration: `MachineInput<Tag, Props, Own>` →
+  `MachineInput<Tag, Props & Own>` — for members that were in `Own`, the
+  resulting type is identical (proven by `tests/type-assertions.ts`).
+- **BREAKING** — `Props` members now shadow native attributes of the same
+  name, instead of intersecting with them. Previously, a `Props` member
+  sharing a name with a native attribute was intersected with that
+  attribute's native type, which could produce a redundant, lossy, or
+  unsatisfiable type — e.g. an attr-tag `title` vs. the native
+  `string | false | null` (unsatisfiable), or `@zag-js/checkbox`'s `checked:
+  boolean | "indeterminate"` intersected with the native `checked: boolean`,
+  which silently collapsed to `boolean` and dropped `"indeterminate"`
+  (lossy). `Props` now always wins on a name collision, so a **Props member
+  colliding with a native attribute now widens to the declared Props type**
+  — e.g. `checkbox.Props["checked"]`'s full `boolean | "indeterminate"` is no
+  longer silently narrowed away. See
+  [`MachineInput`](https://marko-zag.saulo.tech/api/machine-input) for the
+  shadowing rule and the `Props & Extras` migration pattern.
+
+  **Migration consequence:** because a shadowed prop keeps its full `Props`
+  type, it is no longer assignable to the native attribute it shadows, and a
+  component that forwarded it straight onto the rendered element now gets a
+  correct type error there. Such props are machine-owned state: let the
+  machine's `get*Props()` supply the element's value and drop the incoming
+  prop from the leftover object you spread. Two real instances, both correct
+  diagnostics rather than regressions: `@zag-js/checkbox`'s
+  `checked: boolean | "indeterminate"` spread onto a native `<input>`
+  (`api().getHiddenInputProps()` already emits `checked`), and
+  `@zag-js/slider`'s `"aria-label"?: string[]` (one label per thumb), which
+  previously intersected with the native `aria-label?: AttrString` into an
+  unsatisfiable type that rejected *every* value — consumers passing a bare
+  string now get a clear `string` vs. `string[]` error instead.
+
 ## [2.1.0] - 2026-09-13
 
 ### Added

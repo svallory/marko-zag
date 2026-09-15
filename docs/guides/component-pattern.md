@@ -110,18 +110,30 @@ A complete, production-shaped dialog wrapping
 trimmed — this is the wiring used by
 [marko-ui](https://github.com/svallory/marko-ui)'s dialog):
 
+`title` and `content` here are attr-tag-style extras that collide by name
+with the native `title` and `content` attributes on `div`. `MachineInput`
+folds declared `Props` members over native attributes of the same name, so
+extras like these go into the `Props` argument via intersection
+(`MachineInput<Tag, Props & Extras>`), not into the trailing `&` — that way
+`title`/`content` resolve to exactly the declared `Marko.Body` type instead
+of an unsatisfiable intersection with the native attribute's string type.
+See [`MachineInput`](/api/machine-input) for the full shadowing rule.
+
 ```marko
 /* dialog.marko */
 import * as dialogMachine from "@zag-js/dialog";
 import type { MachineInput } from "marko-zag";
 
-export type Input = MachineInput<"div", dialogMachine.Props> & {
+type Extras = {
   /** Marko-friendly sugar so callers can write `open:=state.showDialog` */
   openChange?: (open: boolean) => void;
   trigger?: Marko.Body<[Record<string, unknown>]>;
   title?: Marko.Body;
   content?: Marko.Body;
 };
+
+export type Input = MachineInput<"div", dialogMachine.Props & Extras> &
+  Extras;
 
 // One tag: pick the machine props out of `input`, run the machine, connect.
 // `openChange` needs no wiring — `onOpenChange` carries `details.open`, so
