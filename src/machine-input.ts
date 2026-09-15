@@ -37,6 +37,20 @@
  * };
  * ```
  *
+ * Shadowing widens the component's *public* input, which is the point — but
+ * a widened prop is no longer assignable to the native attribute it shadows,
+ * so it must not be spread straight onto the rendered element. `checked` is
+ * the worked example: `Input["checked"]` is correctly
+ * `boolean | "indeterminate"`, while the native `<input>`'s `checked` is
+ * `AttrBoolean`. Such props are machine-owned state — let the machine's own
+ * `get*Props()` supply the element's value (for checkbox,
+ * `api().getHiddenInputProps()` already emits `checked`) and drop the
+ * incoming prop from whatever leftover object gets spread. The same applies
+ * to any Zag prop whose type is wider than, or a different shape from, the
+ * native attribute of that name (e.g. `@zag-js/slider`'s
+ * `"aria-label"?: string[]`, one label per thumb, vs. the native
+ * `aria-label?: AttrString`).
+ *
  * A component that declares a member colliding with a native attribute
  * (e.g. `title` on `div`) folds it into `Props` via intersection, so it
  * shadows the native attribute's type instead of intersecting with it:

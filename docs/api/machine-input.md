@@ -67,6 +67,39 @@ export type Input = MachineInput<"div", dialogMachine.Props & Extras> &
   Extras;
 ```
 
+## Don't forward a shadowed prop to the element
+
+Shadowing widens the component's *public* input, which is the point — but a
+widened prop is no longer assignable to the native attribute it shadows, so
+it must not be spread straight onto the rendered element.
+
+`checked` is the worked example: `Input["checked"]` is correctly
+`boolean | "indeterminate"`, while the native `<input>`'s `checked` is
+`AttrBoolean`. Spreading the leftover props from `splitProps` onto the
+element therefore fails to type-check — correctly, since
+`checked="indeterminate"` is not a valid HTML attribute value.
+
+Such props are machine-owned state. Let the machine's own `get*Props()`
+supply the element's value and drop the incoming prop from whatever leftover
+object you spread:
+
+```marko
+// checkbox: api().getHiddenInputProps() already emits `checked`,
+// so the incoming `checked` prop is dropped rather than forwarded.
+<const/hiddenInputProps=(): Marko.NativeTags["input"]["input"] => ({
+  ...stripOwnProps(splitProps(input)[1], "class", "checked"),
+  ...api().getHiddenInputProps(),
+})>
+```
+
+The same applies to any Zag prop whose type is wider than, or a different
+shape from, the native attribute of that name. `@zag-js/slider` declares
+`"aria-label"?: string[]` — one label per thumb — against the native
+`aria-label?: AttrString`, so a consumer passes an array
+(`aria-label=["Volume"]`), and the component reads it from
+`api().getThumbProps({ index })` rather than forwarding it to the root
+element.
+
 ## Remarks
 
 Controlled-prop semantics follow Zag v1: passing a controlled prop (e.g.

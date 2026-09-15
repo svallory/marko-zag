@@ -30,6 +30,20 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
   [`MachineInput`](https://marko-zag.saulo.tech/api/machine-input) for the
   shadowing rule and the `Props & Extras` migration pattern.
 
+  **Migration consequence:** because a shadowed prop keeps its full `Props`
+  type, it is no longer assignable to the native attribute it shadows, and a
+  component that forwarded it straight onto the rendered element now gets a
+  correct type error there. Such props are machine-owned state: let the
+  machine's `get*Props()` supply the element's value and drop the incoming
+  prop from the leftover object you spread. Two real instances, both correct
+  diagnostics rather than regressions: `@zag-js/checkbox`'s
+  `checked: boolean | "indeterminate"` spread onto a native `<input>`
+  (`api().getHiddenInputProps()` already emits `checked`), and
+  `@zag-js/slider`'s `"aria-label"?: string[]` (one label per thumb), which
+  previously intersected with the native `aria-label?: AttrString` into an
+  unsatisfiable type that rejected *every* value — consumers passing a bare
+  string now get a clear `string` vs. `string[]` error instead.
+
 ## [2.1.0] - 2026-09-13
 
 ### Added
