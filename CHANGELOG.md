@@ -13,17 +13,22 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 - **BREAKING** — the `Own` third type parameter of `MachineInput<Tag, Props,
   Own>` (added in 2.1.0) is removed. `MachineInput` is two-parameter again:
   `MachineInput<Tag, Props>`. Migration: `MachineInput<Tag, Props, Own>` →
-  `MachineInput<Tag, Props & Own>` — the resulting type is identical (proven
-  by `tests/type-assertions.ts`).
+  `MachineInput<Tag, Props & Own>` — for members that were in `Own`, the
+  resulting type is identical (proven by `tests/type-assertions.ts`).
 - **BREAKING** — `Props` members now shadow native attributes of the same
   name, instead of intersecting with them. Previously, a `Props` member
-  sharing a name with a native attribute (e.g. Zag's `dir`, or a
-  component-declared attr-tag colliding with a native attribute like
-  `title`) was intersected with that attribute's native type, which could
-  produce an unsatisfiable type (e.g. an attr-tag `title` vs. the native
-  `string | false | null`). `Props` now always wins on a name collision; see
-  [`MachineInput`](/api/machine-input) for the shadowing rule and the
-  `Props & Extras` migration pattern.
+  sharing a name with a native attribute was intersected with that
+  attribute's native type, which could produce a redundant, lossy, or
+  unsatisfiable type — e.g. an attr-tag `title` vs. the native
+  `string | false | null` (unsatisfiable), or `@zag-js/checkbox`'s `checked:
+  boolean | "indeterminate"` intersected with the native `checked: boolean`,
+  which silently collapsed to `boolean` and dropped `"indeterminate"`
+  (lossy). `Props` now always wins on a name collision, so a **Props member
+  colliding with a native attribute now widens to the declared Props type**
+  — e.g. `checkbox.Props["checked"]`'s full `boolean | "indeterminate"` is no
+  longer silently narrowed away. See
+  [`MachineInput`](https://marko-zag.saulo.tech/api/machine-input) for the
+  shadowing rule and the `Props & Extras` migration pattern.
 
 ## [2.1.0] - 2026-09-13
 

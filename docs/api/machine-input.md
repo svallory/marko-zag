@@ -19,8 +19,11 @@ name.
 
 `Props` always wins on a name collision — there is no case where
 intersecting a declared member with a native attribute is wanted, since it
-only produces unsatisfiable types (e.g. an attr-tag `title` vs. the native
-`string | false | null`).
+only produces redundant, lossy, or unsatisfiable types. An attr-tag `title`
+vs. the native `string | false | null` is unsatisfiable; `@zag-js/checkbox`'s
+`checked: boolean | "indeterminate"` intersected with the native
+`checked: boolean` silently collapses to `boolean`, dropping
+`"indeterminate"` (lossy) — shadowing fixes that regression.
 
 The only other adjustment is `id`: Zag's `CommonProperties` requires it, but
 the [`<zag>`](/api/tags/#zag) tag generates a stable one automatically — so

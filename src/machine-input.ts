@@ -4,11 +4,15 @@
  * same name.
  *
  * `Props` always wins on a name collision (e.g. a Zag `dir` prop over the
- * native `dir` attribute, or a component's own attr-tag member over a
+ * native `dir` attribute, `@zag-js/checkbox`'s `checked` over the native
+ * `checked` attribute, or a component's own attr-tag member over a
  * same-named native attribute) — there is no case where intersecting a
  * declared member with a native attribute is wanted, since it only produces
- * unsatisfiable types (e.g. an attr-tag `title` vs. the native
- * `string | false | null`).
+ * redundant, lossy, or unsatisfiable types: an attr-tag `title` vs. the
+ * native `string | false | null` is unsatisfiable, while
+ * `checked: boolean | "indeterminate"` intersected with the native
+ * `checked: boolean` silently collapses to `boolean`, dropping
+ * `"indeterminate"` (lossy).
  *
  * The only other adjustment is `id`: Zag's `CommonProperties` requires it,
  * but the `<zag>` tag generates a stable one automatically, so consumers

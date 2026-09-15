@@ -189,7 +189,11 @@ export const shadowedTitleIsExactlyPropsType: ShadowedTitleIsExactlyProps =
 
 // An attr-tag Props member shadows the native attribute of the same name
 // exactly (the collision case above, restated directly against Props
-// instead of going through a folded-in Extras type).
+// instead of going through a folded-in Extras type). Note `content` is not
+// itself a native attribute (PropTypes has no `content` key on `div`), so
+// this only exercises the "declared type comes through verbatim" half —
+// the discriminating counterexample against the *old* intersecting
+// behavior is `checked` below, which real-world zag modules already export.
 type AttrTagShadowProps = checkbox.Props & {
   content?: Marko.AttrTag<TitleAttrTag>;
 };
@@ -198,17 +202,28 @@ declare const shadowedContent: AttrTagShadowedInput["content"];
 export const shadowedContentIsAttrTag:
   | Marko.AttrTag<TitleAttrTag>
   | undefined = shadowedContent;
-type ShadowedContentIsExactlyProps = Exact<
-  AttrTagShadowedInput["content"],
-  Marko.AttrTag<TitleAttrTag> | undefined
+
+// The real, discriminating counterexample: `@zag-js/checkbox`'s `checked`
+// is `boolean | "indeterminate" | undefined`, colliding with the native
+// `input.checked: boolean | undefined`. Under the OLD (2.1.0) intersecting
+// behavior this pair resolves to plain `boolean | undefined` — the
+// intersection silently drops `"indeterminate"`, a real regression the old
+// design had. Under shadowing it resolves to the full Props type. This
+// `Exact` check is FALSE against the old type and TRUE against the new one
+// — unlike the plain-assignability checks above, it actually pins the
+// behavioral delta (see revert-proof below).
+type CheckboxInput = MachineInput<"input", checkbox.Props>;
+type CheckedIsExactlyCheckboxProps = Exact<
+  CheckboxInput["checked"],
+  checkbox.Props["checked"]
 >;
-export const shadowedContentIsExactlyPropsType: ShadowedContentIsExactlyProps =
+export const checkedIsExactlyCheckboxPropsType: CheckedIsExactlyCheckboxProps =
   true;
 
 // Non-colliding native attrs still pass through untouched: `class` (never in
-// Props) and `dir` (in Props via `DirectionProperty`, but absent from this
-// particular Props-shadowing test type so it should still resolve to
-// checkbox.Props's own `dir`, not the native attribute's).
+// Props) and `dir` (in Props via `DirectionProperty` — this is itself a
+// shadowing case, since `dir` IS a native attribute too, but its resolved
+// value happens to coincide with the native type's usual literal union).
 declare const shadowedClass: ShadowedInput["class"];
 export const shadowedClassIsNativeAttrClass: PropTypes["div"]["class"] =
   shadowedClass;
