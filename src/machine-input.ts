@@ -1,21 +1,26 @@
 /**
  * Input type for a Marko component wrapping a Zag machine: the native tag's
- * attributes intersected with the machine's full `Props` type.
+ * attributes, with `Props` members shadowing any native attribute of the
+ * same name.
  *
- * The only adjustment is `id`: Zag's `CommonProperties` requires it, but the
- * `<zag>` tag generates a stable one automatically, so consumers
+ * `Props` always wins on a name collision (e.g. a Zag `dir` prop over the
+ * native `dir` attribute, or a component's own attr-tag member over a
+ * same-named native attribute) — there is no case where intersecting a
+ * declared member with a native attribute is wanted, since it only produces
+ * unsatisfiable types (e.g. an attr-tag `title` vs. the native
+ * `string | false | null`).
+ *
+ * The only other adjustment is `id`: Zag's `CommonProperties` requires it,
+ * but the `<zag>` tag generates a stable one automatically, so consumers
  * may omit it (and may still override it).
  *
  * @typeParam Tag - The native tag name whose attributes the component
  * forwards (e.g. `"input"`, `"div"`).
  * @typeParam Props - The machine module's exported `Props` type
- * (e.g. `switchMachine.Props`).
- * @typeParam Own - Extra members the component itself declares on its
- * `Input` (e.g. an `<@title>` attr tag). Keys present in `Own` are omitted
- * from the native/`Props` side before intersecting, so a declared member
- * that shares a name with a native attribute (like `title`) is not forced
- * into an unsatisfiable intersection with that attribute's native type.
- * Defaults to `{}`, which is a no-op.
+ * (e.g. `switchMachine.Props`), plus any component-declared extras folded in
+ * via intersection (e.g. an `<@title>` attr tag): `MachineInput<Tag, Props &
+ * Extras>`. Every member of this combined type shadows the same-named native
+ * attribute, if any.
  *
  * @example
  * ```ts
@@ -29,16 +34,12 @@
  * ```
  *
  * A component that declares a member colliding with a native attribute
- * (e.g. `title` on `div`) passes that member as `Own` so it is not
- * intersected with the native attribute's type:
+ * (e.g. `title` on `div`) folds it into `Props` via intersection, so it
+ * shadows the native attribute's type instead of intersecting with it:
  * ```ts
- * export type Input = MachineInput<
- *   "div",
- *   dialogMachine.Props,
- *   { title?: Marko.AttrTag<{ content: Marko.Body }> }
- * > & {
- *   title?: Marko.AttrTag<{ content: Marko.Body }>;
- * };
+ * type Extras = { title?: Marko.AttrTag<{ content: Marko.Body }> };
+ * export type Input = MachineInput<"div", dialogMachine.Props & Extras> &
+ *   Extras;
  * ```
  *
  * @remarks
@@ -49,8 +50,8 @@
  * (`defaultOpen`, `defaultValue`, …) for the uncontrolled, initial-value
  * path.
  */
-export type MachineInput<Tag, Props, Own = {}> = Omit<
-  Marko.Input<Tag> & Omit<Props, "id"> & { id?: string },
-  keyof Own
+export type MachineInput<Tag, Props> = Omit<
+  Marko.Input<Tag>,
+  Exclude<keyof Props, "id">
 > &
-  Own;
+  Omit<Props, "id"> & { id?: string };

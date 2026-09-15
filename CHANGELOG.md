@@ -6,6 +6,25 @@ and the project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-09-15
+
+### Changed
+
+- **BREAKING** — the `Own` third type parameter of `MachineInput<Tag, Props,
+  Own>` (added in 2.1.0) is removed. `MachineInput` is two-parameter again:
+  `MachineInput<Tag, Props>`. Migration: `MachineInput<Tag, Props, Own>` →
+  `MachineInput<Tag, Props & Own>` — the resulting type is identical (proven
+  by `tests/type-assertions.ts`).
+- **BREAKING** — `Props` members now shadow native attributes of the same
+  name, instead of intersecting with them. Previously, a `Props` member
+  sharing a name with a native attribute (e.g. Zag's `dir`, or a
+  component-declared attr-tag colliding with a native attribute like
+  `title`) was intersected with that attribute's native type, which could
+  produce an unsatisfiable type (e.g. an attr-tag `title` vs. the native
+  `string | false | null`). `Props` now always wins on a name collision; see
+  [`MachineInput`](/api/machine-input) for the shadowing rule and the
+  `Props & Extras` migration pattern.
+
 ## [2.1.0] - 2026-09-13
 
 ### Added
